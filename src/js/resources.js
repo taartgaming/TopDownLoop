@@ -2,7 +2,7 @@ import { ImageSource, Sound, Resource, Loader } from 'excalibur'
 import { TiledResource } from '@excaliburjs/plugin-tiled';
 
 const Resources = {
-    playerLeft: new ImageSource('/images/playerLeft.png'),
+    playerLeft: new ImageSource('./images/playerLeft.png'),
     playerRight: new ImageSource('./images/playerRight.png'),
     playerUp: new ImageSource('./images/playerUp.png'),
     playerDown: new ImageSource('./images/playerDown.png'),
@@ -50,10 +50,11 @@ const Resources = {
     orcAttackDownRight: new ImageSource('./images/Enemy-Melee-Attack-SE.png'),
     orcAttackUpLeft: new ImageSource('./images/Enemy-Melee-Attack-NW.png'),
     orcAttackUpRight: new ImageSource('./images/Enemy-Melee-Attack-NE.png'),
+    
     Level1: new TiledResource('./maps/city/map.tmj', {strict: false, useTilemapCameraStrategy: true}),
     bgMusic: new Sound('./sound/bgm.mp3'),
-    hitSound: new Sound('./sound/hit.mp3'),
-    shootSound: new Sound('./sound/shoot.mp3')
+    hitSound: new Sound('./sound/sfx/hit.mp3'),
+    shootSound: new Sound('./sound/sfx/shoot.mp3')
 
 }
 

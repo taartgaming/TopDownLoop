@@ -28,6 +28,7 @@ export class Player extends Entity {
         super({ width: 64, height: 64, health: startingHealth, collisionType: CollisionType.Active });
         this.collider.set(Shape.Circle(24));
         this.playerIndex = playerIndex;
+        this.isPlayer = true;
         
 
         this.speed = 150;

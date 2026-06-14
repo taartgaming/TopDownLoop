@@ -1,4 +1,4 @@
-import { Actor, Vector, ParticleEmitter, EmitterType, Color, ParticleTransform, Shape, CollisionType } from "excalibur";
+import { Actor, Vector, ParticleEmitter, EmitterType, Color, ParticleTransform, Shape, CollisionType, Circle } from "excalibur";
 import { Enemy } from "./enemy.js";
 import { GameState } from "./gamestate.js";
 
@@ -26,6 +26,12 @@ export class MagicProjectile extends Actor {
      */
     onInitialize(engine) {
         this.vel = this.direction.scale(this.speed);
+
+        // Render a core circle graphic to guarantee it displays even if the particle emitter delays
+        this.graphics.use(new Circle({
+            radius: 8,
+            color: Color.Cyan
+        }));
 
         const emitter = new ParticleEmitter({
             pos: new Vector(0, 0),

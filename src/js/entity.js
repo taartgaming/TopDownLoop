@@ -79,7 +79,7 @@ export class Entity extends Actor {
      */
     addFireDamage() {
         // UNBURN rule: Enemies take 0 fire damage
-        if (GameState.hasRule('UNBURN') && this.constructor.name !== 'Player') return;
+        if (GameState.hasRule('UNBURN') && !this.isPlayer) return;
         
         this.fireTicks = 3;
         this.fireTimer = 1000;

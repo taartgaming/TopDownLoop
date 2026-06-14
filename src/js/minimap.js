@@ -1,4 +1,5 @@
 import { ScreenElement, CollisionType, Rectangle, Color, vec, GraphicsGroup, Circle } from 'excalibur';
+import { Enemy } from './enemy.js';
 
 const MAP_WIDTH = 120;
 const MAP_HEIGHT = 120;
@@ -85,9 +86,7 @@ export class Minimap extends ScreenElement {
         }
 
         for (let actor of this.game.currentScene.actors) {
-            if (actor.constructor.name === 'Enemy' || 
-                actor.constructor.name === 'Orc' || 
-                actor.constructor.name === 'Shadow') {
+            if (actor instanceof Enemy) {
                 const ax = Math.max(0, Math.min(MAP_WIDTH, actor.pos.x * SCALE));
                 const ay = Math.max(0, Math.min(MAP_HEIGHT, actor.pos.y * SCALE));
                 const enemyDot = new Circle({

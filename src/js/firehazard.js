@@ -1,4 +1,5 @@
 import { Actor, Shape, CollisionType, Color, Circle } from "excalibur";
+import { Player } from "./player.js";
 
 export class FireHazard extends Actor {
     /**
@@ -21,7 +22,7 @@ export class FireHazard extends Actor {
     }
 
     onCollisionStart(self, other, side, contact) {
-        if (other.owner.constructor.name === 'Player') {
+        if (other.owner instanceof Player) {
             other.owner.addFireDamage();
         }
     }
