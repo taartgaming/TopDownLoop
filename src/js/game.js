@@ -7,6 +7,7 @@ import { createMinimap } from './minimap.js'
 import { Shadow } from './shadow.js'
 import { DeathRealmScene } from './deathrealmscene.js'
 import { ArenaScene } from './arenascene.js'
+import { MenuScene } from './menuscene.js'
 
 export class Game extends Engine {
     player;
@@ -17,6 +18,7 @@ export class Game extends Engine {
             maxFps: 60,
             displayMode: DisplayMode.FitScreen
          })
+        this.addScene('MenuScene', new MenuScene())
         this.addScene('ArenaScene', new ArenaScene())
         this.addScene('DeathRealmScene', new DeathRealmScene())
         this.start(ResourceLoader).then(() => this.startGame())
@@ -24,7 +26,8 @@ export class Game extends Engine {
 
     startGame() {
         console.log("start de game!")
-        this.goToScene('ArenaScene');
+        this.goToScene('MenuScene');
+        
     }
 
 }

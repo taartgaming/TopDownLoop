@@ -1,5 +1,5 @@
 // arenaScene.js
-import { Scene, Timer, vec } from 'excalibur';
+import { Scene, Timer, vec, Color } from 'excalibur';
 import { GameState } from './gamestate.js';
 import { Player } from './player.js'; 
 import { Shadow } from './shadow.js';
@@ -26,6 +26,11 @@ export class ArenaScene extends Scene {
     onActivate(context) {
         const engine = context.engine;
         this.clear(); // Clear previous runs fully
+        
+        if (!Resources.bgMusic.isPlaying()) {
+            Resources.bgMusic.loop = true;
+            Resources.bgMusic.play(0.5); // Start playing at 50% volume
+        }
 
         this.add(this.waveTimer);
         this.waveTimer.start();
@@ -69,7 +74,9 @@ export class ArenaScene extends Scene {
     spawnWave(engine) {
         if (!this.player || this.player.isDead) return;
 
-        if (GameState.currentWave === 2) {
+        GameState.points += 1; // Earn 1 point per wave!
+
+        if (GameState.currentWave === 20) {
             // Boss Wave
             const boss = new Shadow({ health: 10 + GameState.currentLoop * 10, attackDamage: 99 });
             boss.scale = vec(3, 3);
@@ -79,9 +86,33 @@ export class ArenaScene extends Scene {
             
             boss.on('kill', () => {
                 console.log('Boss Defeated! You won the run!');
+                GameState.saveBestLoop(GameState.currentLoop);
+                engine.goToScene('MenuScene');
             });
 
             this.waveTimer.stop(); 
+        } else if (GameState.currentWave % 10 === 0) {
+            // Miniboss Wave
+            let tintColor = null;
+            if (GameState.hasRule('FIRE')) tintColor = Color.Red;
+            else if (GameState.hasRule('POISON')) tintColor = Color.Magenta;
+            else if (GameState.hasRule('UNDEAD')) tintColor = Color.Green;
+            else tintColor = Color.DarkGray; // Default fallback tint
+            
+            const miniboss = new Shadow({ 
+                health: 15 + GameState.currentLoop * 5, 
+                attackDamage: 5,
+                customTint: tintColor
+            });
+            miniboss.scale = vec(2, 2);
+            
+            const spawnRadius = 300 + Math.random() * 200;
+            const angle = Math.random() * Math.PI * 2;
+            miniboss.pos = this.player.pos.add(vec(Math.cos(angle) * spawnRadius, Math.sin(angle) * spawnRadius));
+            this.applyRulesToEntity(miniboss);
+            this.add(miniboss);
+            
+            GameState.currentWave++;
         } else {
             // Normal Wave
             const spawnCount = GameState.currentWave + (GameState.currentLoop * 2); 

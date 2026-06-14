@@ -22,6 +22,11 @@ export class UI extends ScreenElement{
             pos: vec(1280 - 150, 30),
             font: new Font({ size: 24, color: Color.White, family: 'sans-serif' })
         });
+        this.pointsLabel = new Label({
+            text: 'Points: 0',
+            pos: vec(1280 - 150, 70),
+            font: new Font({ size: 24, color: Color.Yellow, family: 'sans-serif' })
+        });
         this.rulesLabel = new Label({
             text: 'Active Rules:\nNone',
             pos: vec(20, 70),
@@ -31,6 +36,7 @@ export class UI extends ScreenElement{
         this.addChild(this.healthLabel);
         this.addChild(this.waveLabel);
         this.addChild(this.loopLabel);
+        this.addChild(this.pointsLabel);
         this.addChild(this.rulesLabel);
     }
 
@@ -44,6 +50,7 @@ export class UI extends ScreenElement{
         
         this.waveLabel.text = `Wave: ${GameState.currentWave}`;
         this.loopLabel.text = `Loop: ${GameState.currentLoop}`;
+        this.pointsLabel.text = `Points: ${GameState.points}`;
         
         const activeRuleNames = GameState.activeRules.map(ruleId => {
             const rule = ALL_RULES.find(r => r.id === ruleId);

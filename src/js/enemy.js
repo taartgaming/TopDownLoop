@@ -32,6 +32,7 @@ export class Enemy extends Entity {
         this.hasAppliedAttackDamage = false;
         this.currentFacing = 'DOWN'; 
         this.attackDamage = options.attackDamage ?? 1;
+        this.customTint = options.customTint ?? null;
         
     }
 
@@ -231,23 +232,20 @@ export class Enemy extends Entity {
 
     playAnimationBasedOnState() {
 
-
         const directionString = this.currentFacing.toLowerCase();
-
+        let activeAnim;
 
         if (this.isAttacking) {
-            this.graphics.use('attack-' + directionString);
-            return;
+            activeAnim = this.graphics.use('attack-' + directionString);
+        } else if (this.vel.x === 0 && this.vel.y === 0) {
+            activeAnim = this.graphics.use('idle'); 
+        } else {
+            activeAnim = this.graphics.use('walk-' + directionString);
         }
-
-        if (this.vel.x === 0 && this.vel.y === 0) {
-
-            this.graphics.use('idle'); 
-            return;
+        
+        if (this.customTint && activeAnim) {
+            activeAnim.tint = this.customTint;
         }
-
-
-        this.graphics.use('walk-' + directionString);
     }
    
 }

@@ -3,6 +3,7 @@ import { Resources } from "./resources.js";
 import { GameState } from "./gamestate.js";
 import { Entity } from "./entity.js";
 import { Enemy } from "./enemy.js";
+import { MagicProjectile } from "./magicprojectile.js";
 
 const Facing = Object.freeze({
     UP: 'UP',
@@ -28,6 +29,9 @@ export class Player extends Entity {
         this.speed = GameState.hasRule('UNTOUCHABLE') ? 75 : 150;
         this.attackCooldown = GameState.hasRule('UNTOUCHABLE') ? 1000 : 300; 
         this.attackTimer = 0;
+        
+        this.shootCooldown = GameState.hasRule('UNTOUCHABLE') ? 800 : 400; 
+        this.shootTimer = 0;
         
         this.currentFacing = Facing.DOWN;
 
@@ -100,12 +104,21 @@ export class Player extends Entity {
             this.attackTimer -= delta;
         }
 
+        if (this.shootTimer > 0) {
+            this.shootTimer -= delta;
+        }
+
         let vx = 0;
         let vy = 0;
 
         if (engine.input.keyboard.wasPressed(Keys.Space) && this.attackTimer <= 0) {
             this.attack();
             this.attackTimer = this.attackCooldown;
+        }
+
+        if (engine.input.keyboard.wasPressed(Keys.F) && this.shootTimer <= 0) {
+            this.shoot();
+            this.shootTimer = this.shootCooldown;
         }
 
         if (engine.input.keyboard.isHeld(Keys.W) || engine.input.keyboard.isHeld(Keys.Up)) vy -= 1;
@@ -141,6 +154,33 @@ export class Player extends Entity {
                 }
             }
         }
+    }
+
+    shoot() {
+        let dir = new Vector(0, 1);
+        switch (this.currentFacing) {
+            case Facing.UP: dir = new Vector(0, -1); break;
+            case Facing.DOWN: dir = new Vector(0, 1); break;
+            case Facing.LEFT: dir = new Vector(-1, 0); break;
+            case Facing.RIGHT: dir = new Vector(1, 0); break;
+            case Facing.UP_LEFT: dir = new Vector(-1, -1).normalize(); break;
+            case Facing.UP_RIGHT: dir = new Vector(1, -1).normalize(); break;
+            case Facing.DOWN_LEFT: dir = new Vector(-1, 1).normalize(); break;
+            case Facing.DOWN_RIGHT: dir = new Vector(1, 1).normalize(); break;
+            case Facing.IDLE: 
+                // If idle, try to use last velocity or default down
+                if (this.vel.size > 0) {
+                    dir = this.vel.normalize();
+                }
+                break;
+        }
+        
+        // Spawn slightly ahead of the player to avoid immediate self-collision
+        const spawnPos = this.pos.add(dir.scale(35));
+        const projectile = new MagicProjectile(spawnPos, dir);
+        
+        this.scene.add(projectile);
+        console.log("Player shot a magic projectile!");
     }
 
     takeDamage(amount = 1) {

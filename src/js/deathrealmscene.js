@@ -7,7 +7,7 @@ export class DeathRealmScene extends Scene {
 
         // Display Title
         const title = new Label({
-            text: 'Death Realm - Choose a new Rule',
+            text: `Death Realm - Choose a new Rule (Points: ${GameState.points})`,
             pos: vec(1280 / 2, 100),
             font: new Font({
                 family: 'sans-serif',
@@ -79,23 +79,62 @@ export class DeathRealmScene extends Scene {
             const descActor = new Actor({ x: cardWidth / 2, y: 130 });
             descActor.graphics.use(descText);
             card.addChild(descActor);
+            
+            const canAfford = GameState.points >= rule.cost;
+            const costLabel = new Label({
+                text: `Cost: ${rule.cost} pts`,
+                pos: vec(cardWidth / 2, cardHeight - 40),
+                font: new Font({
+                    family: 'sans-serif',
+                    size: 22,
+                    color: canAfford ? Color.Yellow : Color.Red,
+                    textAlign: TextAlign.Center,
+                    bold: true
+                })
+            });
+            card.addChild(costLabel);
 
             // Interactive Hover & Click Events
             card.on('pointerenter', () => {
-                bgRect.color = new Color(70, 70, 70); 
+                if(canAfford) bgRect.color = new Color(70, 70, 70); 
             });
             card.on('pointerleave', () => {
                 bgRect.color = new Color(40, 40, 40); 
             });
             
             card.on('pointerup', () => {
-                GameState.activeRules.push(rule.id);
-                console.log(`Rule added: ${rule.name}. Current active rules:`, GameState.activeRules);
-                
-                context.engine.goToScene('ArenaScene'); 
+                if (canAfford) {
+                    GameState.points -= rule.cost;
+                    GameState.activeRules.push(rule.id);
+                    console.log(`Rule added: ${rule.name}. Current active rules:`, GameState.activeRules);
+                    
+                    context.engine.goToScene('ArenaScene'); 
+                }
             });
 
             this.add(card);
         });
+        
+        const skipBtn = new ScreenElement({
+            x: 1280 / 2 - 100,
+            y: 650,
+            width: 200,
+            height: 50
+        });
+        const skipBg = new Rectangle({
+            width: 200, height: 50, color: Color.DarkGray
+        });
+        skipBtn.graphics.use(skipBg);
+        skipBtn.addChild(new Label({
+            text: 'Skip / Continue',
+            pos: vec(100, 25),
+            font: new Font({ family: 'sans-serif', size: 20, color: Color.White, textAlign: TextAlign.Center })
+        }));
+        skipBtn.on('pointerenter', () => skipBg.color = Color.Gray);
+        skipBtn.on('pointerleave', () => skipBg.color = Color.DarkGray);
+        skipBtn.on('pointerup', () => {
+            context.engine.goToScene('ArenaScene');
+        });
+        this.add(skipBtn);
     }
 }

@@ -20,6 +20,8 @@ export const GameState = {
     currentWave: 1,
     activeRules: [], 
     maxLoops: 101,
+    points: 0,
+    bestLoop: localStorage.getItem('bestLoop') ? parseInt(localStorage.getItem('bestLoop')) : null,
 
     hasRule(rule) {
         return this.activeRules.includes(rule);
@@ -28,5 +30,19 @@ export const GameState = {
     triggerDeathLoop() {
         this.currentLoop++;
         this.currentWave = 1;
+    },
+    
+    saveBestLoop(loop) {
+        if (this.bestLoop === null || loop < this.bestLoop) {
+            this.bestLoop = loop;
+            localStorage.setItem('bestLoop', this.bestLoop);
+        }
+    },
+    
+    resetRun() {
+        this.currentLoop = 1;
+        this.currentWave = 1;
+        this.points = 0;
+        this.activeRules = [];
     }
 };
