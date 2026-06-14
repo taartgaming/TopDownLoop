@@ -1,0 +1,109 @@
+import { ScreenElement, CollisionType, Rectangle, Color, vec, GraphicsGroup, Circle } from 'excalibur';
+
+const MAP_WIDTH = 120;
+const MAP_HEIGHT = 120;
+const SCALE = 0.05;
+
+export class Minimap extends ScreenElement {
+    constructor(game) {
+        super({
+            x: 10,
+            y: 10,
+            width: MAP_WIDTH,
+            height: MAP_HEIGHT,
+            z: 999
+        });
+        this.game = game;
+        
+        // Prevent collision with game objects
+        this.collisionType = CollisionType.Passive;
+
+        // Background + border
+        const members = [
+            {
+                graphic: new Rectangle({
+                    width: MAP_WIDTH,
+                    height: MAP_HEIGHT,
+                    color: new Color(0, 0, 0, 0.6)
+                }),
+                offset: vec(0, 0)
+            },
+            // Border outline (white)
+            {
+                graphic: new Rectangle({
+                    width: MAP_WIDTH,
+                    height: MAP_HEIGHT,
+                    color: Color.Transparent,
+                    strokeColor: Color.White,
+                    thickness: 2
+                }),
+                offset: vec(0, 0)
+            }
+        ];
+
+        this.graphics.use(new GraphicsGroup({ members }));
+    }
+
+    onPostUpdate() {
+        // Collect blips as circles in a graphics group
+        const members = [
+            {
+                graphic: new Rectangle({
+                    width: MAP_WIDTH,
+                    height: MAP_HEIGHT,
+                    color: new Color(0, 0, 0, 0.6)
+                }),
+                offset: vec(0, 0)
+            },
+            // Border outline
+            {
+                graphic: new Rectangle({
+                    width: MAP_WIDTH,
+                    height: MAP_HEIGHT,
+                    color: Color.Transparent,
+                    strokeColor: Color.White,
+                    thickness: 2
+                }),
+                offset: vec(0, 0)
+            }
+        ];
+
+        // Player blip (green circle)
+        if (this.game.player) {
+            const px = Math.max(0, Math.min(MAP_WIDTH, this.game.player.pos.x * SCALE));
+            const py = Math.max(0, Math.min(MAP_HEIGHT, this.game.player.pos.y * SCALE));
+            const playerDot = new Circle({
+                radius: 3,
+                color: Color.Green
+            });
+            members.push({
+                graphic: playerDot,
+                offset: vec(px, py)
+            });
+        }
+
+        // Enemy blips (red circles)
+        for (let actor of this.game.currentScene.actors) {
+            if (actor.constructor.name === 'Enemy' || 
+                actor.constructor.name === 'Orc' || 
+                actor.constructor.name === 'Shadow') {
+                const ax = Math.max(0, Math.min(MAP_WIDTH, actor.pos.x * SCALE));
+                const ay = Math.max(0, Math.min(MAP_HEIGHT, actor.pos.y * SCALE));
+                const enemyDot = new Circle({
+                    radius: 2,
+                    color: Color.Red
+                });
+                members.push({
+                    graphic: enemyDot,
+                    offset: vec(ax, ay)
+                });
+            }
+        }
+
+        this.graphics.use(new GraphicsGroup({ members }));
+    }
+}
+
+export function createMinimap(game) {
+    return new Minimap(game);
+}

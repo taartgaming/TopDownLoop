@@ -1,9 +1,15 @@
 import '../css/style.css'
-import { Actor, Engine, Vector, DisplayMode } from "excalibur"
-import { Resources, ResourceLoader } from './resources.js'
+import { Engine, DisplayMode } from "excalibur"
+import { ResourceLoader, Resources } from './resources.js'
+import { Player } from './player.js'
+import { generateRandomLevel } from './levelgenerator.js'
+import { createMinimap } from './minimap.js'
+import { Shadow } from './shadow.js'
+import { DeathRealmScene } from './deathrealmscene.js'
+import { ArenaScene } from './arenascene.js'
 
 export class Game extends Engine {
-
+    player;
     constructor() {
         super({ 
             width: 1280,
@@ -11,22 +17,16 @@ export class Game extends Engine {
             maxFps: 60,
             displayMode: DisplayMode.FitScreen
          })
+        this.addScene('ArenaScene', new ArenaScene())
+        this.addScene('DeathRealmScene', new DeathRealmScene())
         this.start(ResourceLoader).then(() => this.startGame())
     }
 
     startGame() {
         console.log("start de game!")
-        const fish = new Actor()
-        fish.graphics.use(Resources.Fish.toSprite())
-        fish.pos = new Vector(500, 300)
-        fish.vel = new Vector(-10,0)
-        fish.events.on("exitviewport", (e) => this.fishLeft(e))
-        this.add(fish)
+        this.goToScene('ArenaScene');
     }
 
-    fishLeft(e) {
-        e.target.pos = new Vector(1350, 300)
-    }
 }
 
 new Game()
