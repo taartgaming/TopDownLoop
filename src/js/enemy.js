@@ -1,4 +1,4 @@
-import { Shape, Vector, vec, range, SpriteSheet, Animation } from "excalibur"
+import { Shape, Vector, vec, range, SpriteSheet, Animation, CollisionType } from "excalibur"
 import { Resources } from "./resources.js";
 import { Entity } from "./entity.js";
 
@@ -19,7 +19,7 @@ export class Enemy extends Entity {
     moveSpeed = 100;
     touching = false;
     constructor(options = {}) {
-        super({ width: 64, height: 64, health: options.health ?? 1, ...options });
+        super({ width: 64, height: 64, health: options.health ?? 1, collisionType: CollisionType.Active, ...options });
         this.collider.set(Shape.Circle(16)); 
    
         this.moveSpeed = options.moveSpeed ?? 100;
@@ -52,7 +52,7 @@ export class Enemy extends Entity {
         let direction = player.pos.sub(this.pos);
         const distance = direction.size; 
 
-        const attackRange = 40; // Pixels 
+        const attackRange = 60; // Pixels 
 
         this.touching = distance <= attackRange;
 

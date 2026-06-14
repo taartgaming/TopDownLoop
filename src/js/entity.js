@@ -2,7 +2,7 @@ import { Actor } from 'excalibur';
 
 export class Entity extends Actor {
     constructor(options) {
-        super(options);
+        super({ z: 100, ...options });
         this.health = options?.health ?? 1;
         this.isDead = false;
         this.invulnTimer = 0;

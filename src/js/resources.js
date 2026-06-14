@@ -4,7 +4,7 @@ import { TiledResource } from '@excaliburjs/plugin-tiled';
 // voeg hier jouw eigen resources toe
 const Resources = {
     //playerSheets
-    playerLeft: new ImageSource('./images/playerLeft.png'),
+    playerLeft: new ImageSource('/images/playerLeft.png'),
     playerRight: new ImageSource('./images/playerRight.png'),
     playerUp: new ImageSource('./images/playerUp.png'),
     playerDown: new ImageSource('./images/playerDown.png'),
@@ -55,7 +55,6 @@ const Resources = {
     orcAttackUpLeft: new ImageSource('./images/Enemy-Melee-Attack-NW.png'),
     orcAttackUpRight: new ImageSource('./images/Enemy-Melee-Attack-NE.png'),
     //tiles
-    Level1: new TiledResource('./maps/city/map.tmx', {strict: false, useTilemapCameraStrategy: true},),
     Level1: new TiledResource('./maps/city/map.tmj', {strict: false, useTilemapCameraStrategy: true}),
     //audio
     bgMusic: new Sound('./sound/bgm.mp3'),

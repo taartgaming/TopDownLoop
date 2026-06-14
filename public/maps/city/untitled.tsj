@@ -1,0 +1,22 @@
+{ "columns":112,
+ "editorsettings":
+    {
+     "export":
+        {
+         "format":"json",
+         "target":"untitled.tsj"
+        }
+    },
+ "image":"tileset.png",
+ "imageheight":896,
+ "imagewidth":896,
+ "margin":0,
+ "name":"untitled",
+ "spacing":0,
+ "tilecount":12544,
+ "tiledversion":"1.12.1",
+ "tileheight":8,
+ "tilewidth":8,
+ "type":"tileset",
+ "version":"1.10"
+}

@@ -8,7 +8,8 @@ export class MagicProjectile extends Actor {
             width: 16,
             height: 16,
             collider: Shape.Circle(8),
-            collisionType: CollisionType.Passive
+            collisionType: CollisionType.Passive,
+            z: 100
         });
         this.direction = direction;
         this.speed = 400;

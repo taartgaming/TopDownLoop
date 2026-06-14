@@ -1,4 +1,4 @@
-import { Shape, SpriteSheet, Animation, Keys, Vector } from "excalibur"
+import { Shape, SpriteSheet, Animation, Keys, Vector, CollisionType } from "excalibur"
 import { Resources } from "./resources.js";
 import { GameState } from "./gamestate.js";
 import { Entity } from "./entity.js";
@@ -22,7 +22,7 @@ export class Player extends Entity {
        
         const startingHealth = GameState.hasRule('UNDEAD') ? 1 : 1;
         
-        super({ width: 64, height: 64, health: startingHealth });
+        super({ width: 64, height: 64, health: startingHealth, collisionType: CollisionType.Active });
         this.collider.set(Shape.Circle(24));
         
 
@@ -116,8 +116,10 @@ export class Player extends Entity {
             this.attackTimer = this.attackCooldown;
         }
 
-        if (engine.input.keyboard.wasPressed(Keys.F) && this.shootTimer <= 0) {
-            this.shoot();
+        // Shoot with F key or Left Mouse Click
+        const shootPressed = engine.input.keyboard.wasPressed(Keys.F) || engine.input.pointers.primary.isDown;
+        if (shootPressed && this.shootTimer <= 0) {
+            this.shoot(engine);
             this.shootTimer = this.shootCooldown;
         }
 
@@ -156,23 +158,15 @@ export class Player extends Entity {
         }
     }
 
-    shoot() {
-        let dir = new Vector(0, 1);
-        switch (this.currentFacing) {
-            case Facing.UP: dir = new Vector(0, -1); break;
-            case Facing.DOWN: dir = new Vector(0, 1); break;
-            case Facing.LEFT: dir = new Vector(-1, 0); break;
-            case Facing.RIGHT: dir = new Vector(1, 0); break;
-            case Facing.UP_LEFT: dir = new Vector(-1, -1).normalize(); break;
-            case Facing.UP_RIGHT: dir = new Vector(1, -1).normalize(); break;
-            case Facing.DOWN_LEFT: dir = new Vector(-1, 1).normalize(); break;
-            case Facing.DOWN_RIGHT: dir = new Vector(1, 1).normalize(); break;
-            case Facing.IDLE: 
-                // If idle, try to use last velocity or default down
-                if (this.vel.size > 0) {
-                    dir = this.vel.normalize();
-                }
-                break;
+    shoot(engine) {
+        // Get mouse position and aim towards it
+        const mousePos = engine.input.pointers.primary.lastWorldPos;
+        let dir = mousePos.sub(this.pos);
+        
+        if (dir.size === 0) {
+            dir = new Vector(0, 1);
+        } else {
+            dir = dir.normalize();
         }
         
         // Spawn slightly ahead of the player to avoid immediate self-collision
