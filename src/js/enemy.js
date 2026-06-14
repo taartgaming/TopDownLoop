@@ -1,6 +1,7 @@
 import { Shape, Vector, vec, range, SpriteSheet, Animation, CollisionType } from "excalibur"
 import { Resources } from "./resources.js";
 import { Entity } from "./entity.js";
+import { ManaDrop } from "./manadrop.js";
 
 const Facing = Object.freeze({
     UP: 'UP',
@@ -18,6 +19,9 @@ export class Enemy extends Entity {
 
     moveSpeed = 100;
     touching = false;
+    /**
+     * Initializes base stats, bounding box, timing for attacks, and appearance settings.
+     */
     constructor(options = {}) {
         super({ width: 64, height: 64, health: options.health ?? 1, collisionType: CollisionType.Active, ...options });
         this.collider.set(Shape.Circle(16)); 
@@ -36,6 +40,9 @@ export class Enemy extends Entity {
         
     }
 
+    /**
+     * Initializes the enemy into the engine, randomizing its spawn position and generating animations.
+     */
     onInitialize(engine) {
         console.log("initializing enemy");
         this.pos = new Vector(Math.random() * engine.drawWidth, Math.random() * engine.drawHeight);
@@ -44,6 +51,9 @@ export class Enemy extends Entity {
     }
 
 
+    /**
+     * Updates the enemy's logic every frame, checking ranges to the player and managing attacks.
+     */
     onPreUpdate(engine, delta) {
         if (this.isDead) return;
         const player = engine.currentScene?.player || engine.player;
@@ -51,8 +61,7 @@ export class Enemy extends Entity {
 
         let direction = player.pos.sub(this.pos);
         const distance = direction.size; 
-
-        const attackRange = 60; // Pixels 
+        const attackRange = 60; 
 
         this.touching = distance <= attackRange;
 
@@ -92,6 +101,9 @@ export class Enemy extends Entity {
         this.playAnimationBasedOnState();
     }
 
+    /**
+     * Triggers the attack state, stopping the enemy and playing the attack animation.
+     */
     startAttack() {
         this.isAttacking = true;
         this.attackTimer = this.attackDuration;
@@ -110,6 +122,21 @@ export class Enemy extends Entity {
         console.log("Whack! Dealt damage to the player!");
     }
 
+    /**
+     * Overrides the Entity death to have a chance to drop mana.
+     */
+    die() {
+        if (!this.isDead && this.scene) {
+            if (Math.random() < 0.35) { // 35% chance to drop mana
+                this.scene.add(new ManaDrop(this.pos.clone()));
+            }
+        }
+        super.die(); // Call original entity kill code
+    }
+
+    /**
+     * Constructs and registers the SpriteSheets and Animations based on the definition settings.
+     */
     setupAnimations() {
         const animationDefinition = this.getAnimationDefinition();
         const gridConfig = animationDefinition.gridConfig ?? {
@@ -178,6 +205,9 @@ export class Enemy extends Entity {
         this.graphics.use('idle');
     }
 
+    /**
+     * Retrieves the specific sprite resources for this enemy's animations. Must be overridden.
+     */
     getAnimationDefinition() {
         return {
             frameSpeed: this.animationFrameSpeed,
@@ -202,12 +232,14 @@ export class Enemy extends Entity {
 
     
 
+   /**
+    * Evaluates the current velocity mapping to 8-directional facing states.
+    */
    updateFacingState() {
 
         if(this.vel.x === 0 && this.vel.y === 0) {
             return;
         }
-        // Math.sign reduces velocity to 1, -1, or 0 regardless of your actual speed
         const sx = Math.sign(this.vel.x); 
         const sy = Math.sign(this.vel.y);
 
@@ -230,6 +262,9 @@ export class Enemy extends Entity {
         }
     }
 
+    /**
+     * Plays the appropriate animation from the defined state and applies custom tints.
+     */
     playAnimationBasedOnState() {
 
         const directionString = this.currentFacing.toLowerCase();

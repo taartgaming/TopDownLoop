@@ -3,10 +3,16 @@ import { Resources } from "./resources.js";
 
 export class Shadow extends Enemy {
 
+    /**
+     * Initializes specific movement speed, frame speed, and attack timing stats for Shadows.
+     */
     constructor(options = {}) {
         super({ moveSpeed: 120, animationFrameSpeed: 60, attackHitFrame: 6, ...options });
     }
 
+    /**
+     * Maps the Shadow image resources to the necessary animation definitions.
+     */
     getAnimationDefinition() {
         return {
             frameSpeed: 60,

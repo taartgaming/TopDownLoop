@@ -2,10 +2,13 @@ import { Scene, Label, vec, Font, Color, TextAlign, ScreenElement, Rectangle, Te
 import { GameState, ALL_RULES } from './gamestate.js';
 
 export class DeathRealmScene extends Scene {
+    /**
+     * Activates the death realm scene, offering the player a choice of rules
+     * to purchase using points earned during their run.
+     */
     onActivate(context) {
         this.clear();
 
-        // Display Title
         const title = new Label({
             text: `Death Realm - Choose a new Rule (Points: ${GameState.points})`,
             pos: vec(1280 / 2, 100),
@@ -18,10 +21,8 @@ export class DeathRealmScene extends Scene {
         });
         this.add(title);
 
-        // Filter out rules that the player already has
         const availableRules = ALL_RULES.filter(r => !GameState.hasRule(r.id));
         
-        // Shuffle and pick up to 3 rules
         availableRules.sort(() => Math.random() - 0.5);
         const choices = availableRules.slice(0, 3);
 
@@ -29,7 +30,6 @@ export class DeathRealmScene extends Scene {
         const cardHeight = 400;
         const gapX = 350;
         
-        // Center the whole group of cards on the screen
         const startX = (1280 / 2) - (((choices.length - 1) * gapX) / 2) - (cardWidth / 2);
 
         choices.forEach((rule, index) => {
@@ -49,7 +49,6 @@ export class DeathRealmScene extends Scene {
             });
             card.graphics.use(bgRect);
 
-            // Rule Name Label
             const titleLabel = new Label({
                 text: rule.name,
                 pos: vec(cardWidth / 2, 50),
@@ -63,7 +62,6 @@ export class DeathRealmScene extends Scene {
             });
             card.addChild(titleLabel);
 
-            // Rule Description Text 
             const descText = new Text({
                 text: rule.description,
                 maxWidth: 260,
@@ -75,7 +73,6 @@ export class DeathRealmScene extends Scene {
                 })
             });
             
-            // Wrap the text graphic in a standard actor child
             const descActor = new Actor({ x: cardWidth / 2, y: 130 });
             descActor.graphics.use(descText);
             card.addChild(descActor);
@@ -94,7 +91,6 @@ export class DeathRealmScene extends Scene {
             });
             card.addChild(costLabel);
 
-            // Interactive Hover & Click Events
             card.on('pointerenter', () => {
                 if(canAfford) bgRect.color = new Color(70, 70, 70); 
             });

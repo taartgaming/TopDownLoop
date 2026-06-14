@@ -2,6 +2,9 @@ import { Actor, Vector, ParticleEmitter, EmitterType, Color, ParticleTransform, 
 import { Enemy } from "./enemy.js";
 
 export class MagicProjectile extends Actor {
+    /**
+     * Sets up the magic projectile's initial velocity, hit box, and properties.
+     */
     constructor(pos, direction) {
         super({
             pos: pos,
@@ -14,13 +17,15 @@ export class MagicProjectile extends Actor {
         this.direction = direction;
         this.speed = 400;
         this.damage = 1;
-        this.life = 3000; // 3 seconds lifespan to avoid memory leaks
+        this.life = 3000; 
     }
 
+    /**
+     * Instantiates the projectile, assigning velocity, collision handling, and the particle emitter.
+     */
     onInitialize(engine) {
         this.vel = this.direction.scale(this.speed);
 
-        // Magic Particle Trail
         const emitter = new ParticleEmitter({
             pos: new Vector(0, 0),
             emitterType: EmitterType.Circle,
@@ -41,15 +46,21 @@ export class MagicProjectile extends Actor {
             }
         });
         this.addChild(emitter);
-
-        this.on('collisionstart', (evt) => {
-            if (evt.other instanceof Enemy && !evt.other.isDead) {
-                evt.other.takeDamage(this.damage);
-                this.kill(); // Destroy projectile on impact
-            }
-        });
     }
 
+    /**
+     * Excalibur lifecycle method for collisions.
+     */
+    onCollisionStart(self, other, side, contact) {
+        if (other.owner instanceof Enemy && !other.owner.isDead) {
+            other.owner.takeDamage(this.damage);
+            this.kill(); 
+        }
+    }
+
+    /**
+     * Destroys the projectile when its lifespan runs out to prevent memory leaks.
+     */
     onPostUpdate(engine, delta) {
         this.life -= delta;
         if (this.life <= 0) {

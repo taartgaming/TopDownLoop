@@ -1,6 +1,9 @@
 import { Actor } from 'excalibur';
 
 export class Entity extends Actor {
+    /**
+     * Initializes base entity configurations such as health and z-index priority.
+     */
     constructor(options) {
         super({ z: 100, ...options });
         this.health = options?.health ?? 1;
@@ -10,15 +13,16 @@ export class Entity extends Actor {
         this.fireTimer = 0;
     }
 
+    /**
+     * Updates invulnerability animations and processes status effects like burning.
+     */
     onPostUpdate(engine, delta) {
         if (this.invulnTimer > 0) {
             this.invulnTimer -= delta;
-            // Create a blinking effect every 100ms
             this.graphics.opacity = (Math.floor(this.invulnTimer / 100) % 2 === 0) ? 0.5 : 1.0;
             if (this.invulnTimer <= 0) this.graphics.opacity = 1.0;
         }
 
-        // Damage Over Time Logic for Burn Rules
         if (this.fireTicks > 0 && !this.isDead) {
             this.fireTimer -= delta;
             if (this.fireTimer <= 0) {
@@ -29,32 +33,43 @@ export class Entity extends Actor {
                 }
                 
                 this.fireTicks--;
-                this.fireTimer = 1000; // Reset timer for the next 1s tick
+                this.fireTimer = 1000; 
             }
         }
     }
 
+    /**
+     * Decreases entity health and triggers invulnerability or death appropriately.
+     */
     takeDamage(amount = 1) {
         if (this.isDead || this.invulnTimer > 0) return;
         this.health -= amount;
-        this.invulnTimer = 1000; // 1 second of invulnerability
+        this.invulnTimer = 1000; 
         
         if (this.health <= 0) {
             this.die();
         }
     }
 
+    /**
+     * Marks the entity as dead and removes it from the game scene.
+     */
     die() {
         this.isDead = true;
         this.kill();
     }
 
+    /**
+     * Applies a fire damage-over-time status effect.
+     */
     addFireDamage() {
         this.fireTicks = 3;
         this.fireTimer = 1000;
     }
 
+    /**
+     * Applies a poison aura effect.
+     */
     addPoisonAura() {
-        // Placeholder logic to be expanded on based on ALL_RULES
     }
 }

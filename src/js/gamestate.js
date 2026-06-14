@@ -23,15 +23,24 @@ export const GameState = {
     points: 0,
     bestLoop: localStorage.getItem('bestLoop') ? parseInt(localStorage.getItem('bestLoop')) : null,
 
+    /**
+     * Checks whether a specific rule string identifier is currently active.
+     */
     hasRule(rule) {
         return this.activeRules.includes(rule);
     },
 
+    /**
+     * Advances the loop counter when the player dies and resets wave progression.
+     */
     triggerDeathLoop() {
         this.currentLoop++;
         this.currentWave = 1;
     },
     
+    /**
+     * Compares and saves a new best record loop locally to the browser.
+     */
     saveBestLoop(loop) {
         if (this.bestLoop === null || loop < this.bestLoop) {
             this.bestLoop = loop;
@@ -39,6 +48,9 @@ export const GameState = {
         }
     },
     
+    /**
+     * Resets the entire run progression including waves, loops, points, and rules.
+     */
     resetRun() {
         this.currentLoop = 1;
         this.currentWave = 1;

@@ -11,6 +11,9 @@ import { MenuScene } from './menuscene.js'
 
 export class Game extends Engine {
     player;
+    /**
+     * Initializes the Excalibur Engine, registers scenes, and starts the resource loader.
+     */
     constructor() {
         super({ 
             width: 1280,
@@ -24,6 +27,9 @@ export class Game extends Engine {
         this.start(ResourceLoader).then(() => this.startGame())
     }
 
+    /**
+     * Triggers the transition to the menu scene once initialization and loading is complete.
+     */
     startGame() {
         console.log("start de game!")
         this.goToScene('MenuScene');

@@ -1,9 +1,7 @@
 import { ImageSource, Sound, Resource, Loader } from 'excalibur'
 import { TiledResource } from '@excaliburjs/plugin-tiled';
 
-// voeg hier jouw eigen resources toe
 const Resources = {
-    //playerSheets
     playerLeft: new ImageSource('/images/playerLeft.png'),
     playerRight: new ImageSource('./images/playerRight.png'),
     playerUp: new ImageSource('./images/playerUp.png'),
@@ -12,7 +10,6 @@ const Resources = {
     playerDown_right: new ImageSource('./images/playerDown_right.png'),
     playerUp_left: new ImageSource('./images/playerUp_left.png'),
     playerUp_right: new ImageSource('./images/playerUp_right.png'),
-    //enemySheets
     enemyWalkLeft: new ImageSource('./images/Enemy-Melee-Idle-W.png'),
     enemyWalkRight: new ImageSource('./images/Enemy-Melee-Idle-E.png'),
     enemyWalkUp: new ImageSource('./images/Enemy-Melee-Idle-N.png'),
@@ -21,7 +18,6 @@ const Resources = {
     enemyWalkDown_right: new ImageSource('./images/Enemy-Melee-Idle-SE.png'),
     enemyWalkUp_left: new ImageSource('./images/Enemy-Melee-Idle-NW.png'),
     enemyWalkUp_right: new ImageSource('./images/Enemy-Melee-Idle-NE.png'),
-    //enemyAttackSheets
     shadowWalkLeft: new ImageSource('./images/Enemy-Melee-Idle-W.png'),
     shadowWalkRight: new ImageSource('./images/Enemy-Melee-Idle-E.png'),
     shadowWalkUp: new ImageSource('./images/Enemy-Melee-Idle-N.png'),
@@ -54,9 +50,7 @@ const Resources = {
     orcAttackDownRight: new ImageSource('./images/Enemy-Melee-Attack-SE.png'),
     orcAttackUpLeft: new ImageSource('./images/Enemy-Melee-Attack-NW.png'),
     orcAttackUpRight: new ImageSource('./images/Enemy-Melee-Attack-NE.png'),
-    //tiles
     Level1: new TiledResource('./maps/city/map.tmj', {strict: false, useTilemapCameraStrategy: true}),
-    //audio
     bgMusic: new Sound('./sound/bgm.mp3'),
 
 }

@@ -5,6 +5,9 @@ const MAP_HEIGHT = 120;
 const SCALE = 0.05;
 
 export class Minimap extends ScreenElement {
+    /**
+     * Initializes the Minimap UI element, configuring its size and overlay location.
+     */
     constructor(game) {
         super({
             x: 10,
@@ -15,10 +18,8 @@ export class Minimap extends ScreenElement {
         });
         this.game = game;
         
-        // Prevent collision with game objects
         this.collisionType = CollisionType.Passive;
 
-        // Background + border
         const members = [
             {
                 graphic: new Rectangle({
@@ -28,7 +29,6 @@ export class Minimap extends ScreenElement {
                 }),
                 offset: vec(0, 0)
             },
-            // Border outline (white)
             {
                 graphic: new Rectangle({
                     width: MAP_WIDTH,
@@ -44,8 +44,10 @@ export class Minimap extends ScreenElement {
         this.graphics.use(new GraphicsGroup({ members }));
     }
 
+    /**
+     * Redraws all dots accurately referencing entity world positions every frame.
+     */
     onPostUpdate() {
-        // Collect blips as circles in a graphics group
         const members = [
             {
                 graphic: new Rectangle({
@@ -55,7 +57,6 @@ export class Minimap extends ScreenElement {
                 }),
                 offset: vec(0, 0)
             },
-            // Border outline
             {
                 graphic: new Rectangle({
                     width: MAP_WIDTH,
@@ -68,7 +69,6 @@ export class Minimap extends ScreenElement {
             }
         ];
 
-        // Player blip (green circle)
         if (this.game.player) {
             const px = Math.max(0, Math.min(MAP_WIDTH, this.game.player.pos.x * SCALE));
             const py = Math.max(0, Math.min(MAP_HEIGHT, this.game.player.pos.y * SCALE));
@@ -82,7 +82,6 @@ export class Minimap extends ScreenElement {
             });
         }
 
-        // Enemy blips (red circles)
         for (let actor of this.game.currentScene.actors) {
             if (actor.constructor.name === 'Enemy' || 
                 actor.constructor.name === 'Orc' || 
@@ -104,6 +103,9 @@ export class Minimap extends ScreenElement {
     }
 }
 
+/**
+ * Instantiates and returns a new Minimap element pointing to the given game.
+ */
 export function createMinimap(game) {
     return new Minimap(game);
 }

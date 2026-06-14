@@ -2,15 +2,26 @@ import { ScreenElement, Label, vec, Font, Color } from 'excalibur';
 import { GameState, ALL_RULES } from './gamestate.js';
 
 export class UI extends ScreenElement{
+    /**
+     * Sets up the UI container to display overlaid information for the user.
+     */
     constructor() {
         super({ x: 0, y: 0, z: 999 });   
     }
     
+    /**
+     * Configures the labels for lives, wave, loops, points, and active rules.
+     */
     onInitialize(engine) {
         this.healthLabel = new Label({
             text: 'Lives: ',
             pos: vec(20, 30),
             font: new Font({ size: 24, color: Color.White, family: 'sans-serif' })
+        });
+        this.manaLabel = new Label({
+            text: 'Mana: 100/100',
+            pos: vec(20, 65),
+            font: new Font({ size: 24, color: Color.Cyan, family: 'sans-serif' })
         });
         this.waveLabel = new Label({
             text: 'Wave: 1',
@@ -29,7 +40,7 @@ export class UI extends ScreenElement{
         });
         this.rulesLabel = new Label({
             text: 'Active Rules:\nNone',
-            pos: vec(20, 70),
+            pos: vec(20, 100),
             font: new Font({ size: 16, color: Color.Yellow, family: 'sans-serif' })
         });
 
@@ -37,15 +48,20 @@ export class UI extends ScreenElement{
         this.addChild(this.waveLabel);
         this.addChild(this.loopLabel);
         this.addChild(this.pointsLabel);
+        this.addChild(this.manaLabel);
         this.addChild(this.rulesLabel);
     }
 
+    /**
+     * Updates the UI text elements to reflect the current GameState data on every frame.
+     */
     onPreUpdate(engine) {
         const player = engine.currentScene.player;
         if (player) {
             let healthText = '';
             for(let i = 0; i < player.health; i++) healthText += '❤️';
             this.healthLabel.text = `Lives: ${healthText}`;
+            this.manaLabel.text = `Mana: ${player.mana}/${player.maxMana}`;
         }
         
         this.waveLabel.text = `Wave: ${GameState.currentWave}`;

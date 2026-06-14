@@ -18,6 +18,9 @@ const Facing = Object.freeze({
 });
 
 export class Player extends Entity {
+    /**
+     * Initializes the player entity, setting up health, speed, colliders, and cooldowns.
+     */
     constructor() {
        
         const startingHealth = GameState.hasRule('UNDEAD') ? 1 : 1;
@@ -34,18 +37,26 @@ export class Player extends Entity {
         this.shootTimer = 0;
         
         this.currentFacing = Facing.DOWN;
+        
+        this.maxMana = 100;
+        this.mana = 100;
+        this.manaCost = 20; // Magic costs 20 mana per shot
 
         this.setupAnimations();
     }
 
+    /**
+     * Initializes the player in the engine and sets the camera strategy to follow the player.
+     */
     onInitialize(engine) {
         console.log("initializing player");
         engine.currentScene.camera.strategy.radiusAroundActor(this, 20);  
     }
 
-
+    /**
+     * Generates and registers all the directional sprite animations.
+     */
     setupAnimations() {
-        //Define the shared grid structure
         const gridConfig = {
             rows: 1, 
             columns: 6, 
@@ -53,7 +64,6 @@ export class Player extends Entity {
             spriteHeight: 64 
         };
 
-        //Create 8 separate SpriteSheets 
         const sheetLeft      = SpriteSheet.fromImageSource({ image: Resources.playerLeft, grid: gridConfig });
         const sheetRight     = SpriteSheet.fromImageSource({ image: Resources.playerRight, grid: gridConfig });
         const sheetUp        = SpriteSheet.fromImageSource({ image: Resources.playerUp, grid: gridConfig });
@@ -63,11 +73,9 @@ export class Player extends Entity {
         const sheetUpLeft    = SpriteSheet.fromImageSource({ image: Resources.playerUp_left, grid: gridConfig });
         const sheetUpRight   = SpriteSheet.fromImageSource({ image: Resources.playerUp_right, grid: gridConfig });
 
-        // Define animation speed and the frame indices 
         const frameSpeed = 150;
         const frameIndices = [0, 1, 2, 3, 4, 5];
 
-        //Create the Animations
         const animLeft      = Animation.fromSpriteSheet(sheetLeft, frameIndices, frameSpeed);
         const animRight     = Animation.fromSpriteSheet(sheetRight, frameIndices, frameSpeed);
         const animUp        = Animation.fromSpriteSheet(sheetUp, frameIndices, frameSpeed);
@@ -79,7 +87,6 @@ export class Player extends Entity {
 
         const animIdle      = Animation.fromSpriteSheet(sheetDown, [0], frameSpeed);
 
-        //Register to the Actor's graphics component
         this.graphics.add('left', animLeft);
         this.graphics.add('right', animRight);
         this.graphics.add('up', animUp);
@@ -90,12 +97,13 @@ export class Player extends Entity {
         this.graphics.add('up-right', animUpRight);
         this.graphics.add('idle', animIdle);
 
-        // Set default
         this.graphics.use('idle');
     }
 
+    /**
+     * Handles input, movement, and combat cooldowns for the player every frame.
+     */
    onPreUpdate(engine, delta) {
-        //Reset input variables
         if (this.isDead) {
             return;
         }
@@ -116,7 +124,6 @@ export class Player extends Entity {
             this.attackTimer = this.attackCooldown;
         }
 
-        // Shoot with F key or Left Mouse Click
         const shootPressed = engine.input.keyboard.wasPressed(Keys.F) || engine.input.pointers.primary.isDown;
         if (shootPressed && this.shootTimer <= 0) {
             this.shoot(engine);
@@ -134,23 +141,21 @@ export class Player extends Entity {
         }
         this.vel = moveDir.scale(this.speed);
 
-        // 4. Update Enum State based on Velocity
         this.updateFacingState();
-
-        // 5. Use the Enum (e.g., to play animations)
         this.playAnimationBasedOnState();
    }
 
+    /**
+     * Triggers a melee attack within a short range, damaging enemies and applying powerups.
+     */
     attack() {
         const attackRange = 80;
-        // Filter for any active enemies in the current scene
         const enemies = this.scene.actors.filter(a => a instanceof Enemy && !a.isDead);
         for (let enemy of enemies) {
             if (this.pos.distance(enemy.pos) <= attackRange) {
                 enemy.takeDamage(1);
                 console.log("Player attacked enemy!");
                 
-                // Power-Up logic: UNBURN causes enemies to burn!
                 if (GameState.hasRule('UNBURN')) {
                     enemy.addFireDamage();
                 }
@@ -158,8 +163,15 @@ export class Player extends Entity {
         }
     }
 
+    /**
+     * Shoots a magic projectile toward the current mouse position.
+     */
     shoot(engine) {
-        // Get mouse position and aim towards it
+        if (this.mana < this.manaCost) {
+            return; // Not enough mana!
+        }
+        this.mana -= this.manaCost;
+
         const mousePos = engine.input.pointers.primary.lastWorldPos;
         let dir = mousePos.sub(this.pos);
         
@@ -169,7 +181,6 @@ export class Player extends Entity {
             dir = dir.normalize();
         }
         
-        // Spawn slightly ahead of the player to avoid immediate self-collision
         const spawnPos = this.pos.add(dir.scale(35));
         const projectile = new MagicProjectile(spawnPos, dir);
         
@@ -177,11 +188,24 @@ export class Player extends Entity {
         console.log("Player shot a magic projectile!");
     }
 
+    /**
+     * Restores player mana up to the maximum.
+     */
+    restoreMana(amount) {
+        this.mana = Math.min(this.maxMana, this.mana + amount);
+    }
+
+    /**
+     * Reduces the player's health by a specific amount.
+     */
     takeDamage(amount = 1) {
         super.takeDamage(amount);
         console.log(`Player hit! Health remaining: ${this.health}`);
     }
 
+    /**
+     * Triggers player death sequence and transitions to the Death Realm or Game Over.
+     */
     die() {
         this.isDead = true;
         console.log("Player died!");
@@ -195,8 +219,10 @@ export class Player extends Entity {
         }
     }
 
+    /**
+     * Updates the facing direction state based on the current velocity vectors.
+     */
    updateFacingState() {
-        // Math.sign reduces velocity to 1, -1, or 0 regardless of your actual speed
         const sx = Math.sign(this.vel.x); 
         const sy = Math.sign(this.vel.y);
 
@@ -221,8 +247,10 @@ export class Player extends Entity {
         }
     }
 
+    /**
+     * Applies the appropriate graphic animation based on the current facing state.
+     */
     playAnimationBasedOnState() {
-        // 6. Tell the graphics component which animation to "use" based on the enum!
         switch (this.currentFacing) {
             case Facing.IDLE:
                 this.graphics.use('idle');

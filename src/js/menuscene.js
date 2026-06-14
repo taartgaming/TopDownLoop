@@ -3,10 +3,13 @@ import { GameState } from './gamestate.js';
 import { Resources } from './resources.js';
 
 export class MenuScene extends Scene {
+    /**
+     * Activates the menu scene, resets the background music,
+     * and displays the game title and high score.
+     */
     onActivate() {
         this.clear();
         
-        // Ensure music isn't playing on the menu screen
         if (Resources.bgMusic.isPlaying()) {
             Resources.bgMusic.stop();
         }
@@ -40,8 +43,10 @@ export class MenuScene extends Scene {
         this.add(startLabel);
     }
 
+    /**
+     * Checks for input to start the game and transition to the Arena.
+     */
     onPreUpdate(engine) {
-        // Wait for player to press Space, then jump straight into the Arena
         if (engine.input.keyboard.wasPressed(Keys.Space)) {
             GameState.resetRun();
             engine.goToScene('ArenaScene');
