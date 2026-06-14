@@ -11,6 +11,7 @@ export const ALL_RULES = [
     { id: 'UNBREAKABLE', name: 'Unbreakable', description: 'Enemy armor is doubled, greatly increasing their health.', cost: 50 },
     { id: 'UNFADE', name: 'Unfade', description: 'Enemies do not despawn or lose aggro if they wander far away.', cost: 35 },
     { id: 'UNBURN', name: 'Unburn', description: 'Fire rules or weapons deal zero damage to enemies.', cost: 20 },
+    {id: 'UNUSE', name: 'Unuse', description: 'Your mana does not deplete.', cost: 100 },
     { id: 'FIRE', name: 'Burn', description: 'Certain enemies leave a dangerous trail of fire.', cost: 25 },
     { id: 'POISON', name: 'Decay', description: 'A toxic aura surrounds the most powerful enemies.', cost: 30 }
 ];

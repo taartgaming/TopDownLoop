@@ -11,7 +11,7 @@ export class ManaDrop extends Actor {
             collisionType: CollisionType.Passive,
             z: 50 // Render slightly below the player/enemies
         });
-        this.manaAmount = 25; // How much a single drop restores
+        this.manaAmount = 10; // How much a single drop restores
     }
 
     onInitialize(engine) {

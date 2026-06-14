@@ -41,7 +41,7 @@ export class Player extends Entity {
         
         this.maxMana = 100;
         this.mana = 100;
-        this.manaCost = 20; // Magic costs 20 mana per shot
+        this.manaCost = 5; // Magic costs 20 mana per shot
         this.standStillTimer = 0;
 
         this.setupAnimations();
