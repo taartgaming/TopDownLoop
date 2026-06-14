@@ -56,12 +56,21 @@ export class UI extends ScreenElement{
      * Updates the UI text elements to reflect the current GameState data on every frame.
      */
     onPreUpdate(engine) {
-        const player = engine.currentScene.player;
-        if (player) {
+        const players = engine.currentScene.players;
+        if (players) {
             let healthText = '';
-            for(let i = 0; i < player.health; i++) healthText += '❤️';
-            this.healthLabel.text = `Lives: ${healthText}`;
-            this.manaLabel.text = `Mana: ${player.mana}/${player.maxMana}`;
+            let manaText = '';
+            players.forEach((p, idx) => {
+                if (!p.isDead) {
+                    healthText += `P${idx+1}: ${'❤️'.repeat(p.health)}   `;
+                    manaText += `P${idx+1}: ${Math.floor(p.mana)}/${p.maxMana}   `;
+                } else {
+                    healthText += `P${idx+1}: DEAD   `;
+                    manaText += `P${idx+1}: 0/${p.maxMana}   `;
+                }
+            });
+            this.healthLabel.text = healthText;
+            this.manaLabel.text = manaText;
         }
         
         this.waveLabel.text = `Wave: ${GameState.currentWave}`;

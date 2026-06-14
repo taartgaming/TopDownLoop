@@ -1,4 +1,4 @@
-import { Shape, SpriteSheet, Animation, Keys, Vector, CollisionType } from "excalibur"
+import { Shape, SpriteSheet, Animation, Keys, Vector, CollisionType, Buttons, Axes, Actor } from "excalibur"
 import { Resources } from "./resources.js";
 import { GameState } from "./gamestate.js";
 import { Entity } from "./entity.js";
@@ -21,19 +21,20 @@ export class Player extends Entity {
     /**
      * Initializes the player entity, setting up health, speed, colliders, and cooldowns.
      */
-    constructor() {
+    constructor(playerIndex = 1) {
        
-        const startingHealth = GameState.hasRule('UNDEAD') ? 1 : 1;
+        const startingHealth = GameState.hasRule('UNDEAD') ? 6 : 3;
         
         super({ width: 64, height: 64, health: startingHealth, collisionType: CollisionType.Active });
         this.collider.set(Shape.Circle(24));
+        this.playerIndex = playerIndex;
         
 
-        this.speed = GameState.hasRule('UNTOUCHABLE') ? 75 : 150;
-        this.attackCooldown = GameState.hasRule('UNTOUCHABLE') ? 1000 : 300; 
+        this.speed = 150;
+        this.attackCooldown = 300; 
         this.attackTimer = 0;
         
-        this.shootCooldown = GameState.hasRule('UNTOUCHABLE') ? 800 : 400; 
+        this.shootCooldown = 400; 
         this.shootTimer = 0;
         
         this.currentFacing = Facing.DOWN;
@@ -41,6 +42,7 @@ export class Player extends Entity {
         this.maxMana = 100;
         this.mana = 100;
         this.manaCost = 20; // Magic costs 20 mana per shot
+        this.standStillTimer = 0;
 
         this.setupAnimations();
     }
@@ -49,8 +51,7 @@ export class Player extends Entity {
      * Initializes the player in the engine and sets the camera strategy to follow the player.
      */
     onInitialize(engine) {
-        console.log("initializing player");
-        engine.currentScene.camera.strategy.radiusAroundActor(this, 20);  
+        console.log(`initializing player ${this.playerIndex}`);
     }
 
     /**
@@ -118,22 +119,61 @@ export class Player extends Entity {
 
         let vx = 0;
         let vy = 0;
+        let attackPressed = false;
+        let shootPressed = false;
+        
+        // UNMOVE Rule: Take damage if standing still for > 2 seconds
+        if (GameState.hasRule('UNMOVE')) {
+            if (this.vel.x === 0 && this.vel.y === 0) {
+                this.standStillTimer += delta;
+                if (this.standStillTimer > 2000) {
+                    this.takeDamage(1);
+                    this.standStillTimer = 0;
+                }
+            } else {
+                this.standStillTimer = 0;
+            }
+        }
 
-        if (engine.input.keyboard.wasPressed(Keys.Space) && this.attackTimer <= 0) {
+        const gamepad = engine.input.gamepads.at(this.playerIndex - 1);
+
+        // Keyboard Inputs based on Player Index
+        if (this.playerIndex === 1) {
+            if (engine.input.keyboard.isHeld(Keys.A)) vx -= 1;
+            if (engine.input.keyboard.isHeld(Keys.D)) vx += 1;
+            if (engine.input.keyboard.isHeld(Keys.W)) vy -= 1;
+            if (engine.input.keyboard.isHeld(Keys.S)) vy += 1;
+            if (engine.input.keyboard.wasPressed(Keys.Space)) attackPressed = true;
+            if (engine.input.keyboard.wasPressed(Keys.F) || engine.input.pointers.primary.isDown) shootPressed = true;
+        } else {
+            if (engine.input.keyboard.isHeld(Keys.Left)) vx -= 1;
+            if (engine.input.keyboard.isHeld(Keys.Right)) vx += 1;
+            if (engine.input.keyboard.isHeld(Keys.Up)) vy -= 1;
+            if (engine.input.keyboard.isHeld(Keys.Down)) vy += 1;
+            if (engine.input.keyboard.wasPressed(Keys.Enter)) attackPressed = true;
+            if (engine.input.keyboard.wasPressed(Keys.ShiftRight)) shootPressed = true;
+        }
+
+        // Gamepad Inputs
+        if (gamepad && gamepad.connected) {
+            if (gamepad.isButtonHeld(Buttons.DpadLeft) || gamepad.getAxes(Axes.LeftStickX) < -0.5) vx -= 1;
+            if (gamepad.isButtonHeld(Buttons.DpadRight) || gamepad.getAxes(Axes.LeftStickX) > 0.5) vx += 1;
+            if (gamepad.isButtonHeld(Buttons.DpadUp) || gamepad.getAxes(Axes.LeftStickY) < -0.5) vy -= 1;
+            if (gamepad.isButtonHeld(Buttons.DpadDown) || gamepad.getAxes(Axes.LeftStickY) > 0.5) vy += 1;
+            
+            if (gamepad.wasButtonPressed(Buttons.Face1)) attackPressed = true; // A or Cross
+            if (gamepad.wasButtonPressed(Buttons.Face2) || gamepad.wasButtonPressed(Buttons.RightTrigger)) shootPressed = true; // B or Circle or Right Trigger
+        }
+
+        if (attackPressed && this.attackTimer <= 0) {
             this.attack();
             this.attackTimer = this.attackCooldown;
         }
 
-        const shootPressed = engine.input.keyboard.wasPressed(Keys.F) || engine.input.pointers.primary.isDown;
         if (shootPressed && this.shootTimer <= 0) {
-            this.shoot(engine);
+            this.shoot(engine, gamepad);
             this.shootTimer = this.shootCooldown;
         }
-
-        if (engine.input.keyboard.isHeld(Keys.W) || engine.input.keyboard.isHeld(Keys.Up)) vy -= 1;
-        if (engine.input.keyboard.isHeld(Keys.S) || engine.input.keyboard.isHeld(Keys.Down)) vy += 1;
-        if (engine.input.keyboard.isHeld(Keys.A) || engine.input.keyboard.isHeld(Keys.Left)) vx -= 1;
-        if (engine.input.keyboard.isHeld(Keys.D) || engine.input.keyboard.isHeld(Keys.Right)) vx += 1;
 
         let moveDir = new Vector(vx, vy);
         if (moveDir > 0) {
@@ -155,10 +195,6 @@ export class Player extends Entity {
             if (this.pos.distance(enemy.pos) <= attackRange) {
                 enemy.takeDamage(1);
                 console.log("Player attacked enemy!");
-                
-                if (GameState.hasRule('UNBURN')) {
-                    enemy.addFireDamage();
-                }
             }
         }
     }
@@ -166,19 +202,40 @@ export class Player extends Entity {
     /**
      * Shoots a magic projectile toward the current mouse position.
      */
-    shoot(engine) {
-        if (this.mana < this.manaCost) {
-            return; // Not enough mana!
+    shoot(engine, gamepad) {
+        // UNUSE Rule: Mana does not deplete and is not required
+        if (!GameState.hasRule('UNUSE')) {
+            if (this.mana < this.manaCost) {
+                return; // Not enough mana!
+            }
+            this.mana -= this.manaCost;
         }
-        this.mana -= this.manaCost;
 
-        const mousePos = engine.input.pointers.primary.lastWorldPos;
-        let dir = mousePos.sub(this.pos);
+        Resources.shootSound.play();
+
+        let dir = new Vector(0, 1);
         
-        if (dir.size === 0) {
-            dir = new Vector(0, 1);
+        // Aim with controller right stick if being used, otherwise use mouse for P1, or just facing direction
+        const rightX = gamepad && gamepad.connected ? gamepad.getAxes(Axes.RightStickX) : 0;
+        const rightY = gamepad && gamepad.connected ? gamepad.getAxes(Axes.RightStickY) : 0;
+        
+        if (Math.abs(rightX) > 0.2 || Math.abs(rightY) > 0.2) {
+            dir = new Vector(rightX, rightY).normalize();
+        } else if (this.playerIndex === 1 && engine.input.pointers.primary.isDown) {
+            const mousePos = engine.input.pointers.primary.lastWorldPos;
+            const mouseDir = mousePos.sub(this.pos);
+            if (mouseDir.size > 0) dir = mouseDir.normalize();
         } else {
-            dir = dir.normalize();
+            switch (this.currentFacing) {
+                case Facing.UP: dir = new Vector(0, -1); break;
+                case Facing.DOWN: dir = new Vector(0, 1); break;
+                case Facing.LEFT: dir = new Vector(-1, 0); break;
+                case Facing.RIGHT: dir = new Vector(1, 0); break;
+                case Facing.UP_LEFT: dir = new Vector(-1, -1).normalize(); break;
+                case Facing.UP_RIGHT: dir = new Vector(1, -1).normalize(); break;
+                case Facing.DOWN_LEFT: dir = new Vector(-1, 1).normalize(); break;
+                case Facing.DOWN_RIGHT: dir = new Vector(1, 1).normalize(); break;
+            }
         }
         
         const spawnPos = this.pos.add(dir.scale(35));
@@ -199,7 +256,11 @@ export class Player extends Entity {
      * Reduces the player's health by a specific amount.
      */
     takeDamage(amount = 1) {
+        const prevHealth = this.health;
         super.takeDamage(amount);
+        if (this.health < prevHealth) {
+            Resources.hitSound.play();
+        }
         console.log(`Player hit! Health remaining: ${this.health}`);
     }
 
@@ -208,14 +269,20 @@ export class Player extends Entity {
      */
     die() {
         this.isDead = true;
-        console.log("Player died!");
-        const engine = this.scene.engine;
+        console.log(`Player ${this.playerIndex} died!`);
         
-        if (GameState.currentLoop >= GameState.maxLoops) {
-            engine.goToScene('GameOverScene'); 
-        } else {
-            GameState.triggerDeathLoop();
-            engine.goToScene('DeathRealmScene');
+        const scene = this.scene;
+        this.kill(); // Removes them from the screen entirely
+
+        // Check if ALL players are dead
+        if (scene && scene.players.every(p => p.isDead)) {
+            const engine = scene.engine;
+            if (GameState.currentLoop >= GameState.maxLoops) {
+                engine.goToScene('GameOverScene'); 
+            } else {
+                GameState.triggerDeathLoop();
+                engine.goToScene('DeathRealmScene');
+            }
         }
     }
 

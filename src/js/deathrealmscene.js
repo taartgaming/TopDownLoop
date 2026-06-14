@@ -1,4 +1,4 @@
-import { Scene, Label, vec, Font, Color, TextAlign, ScreenElement, Rectangle, Text, Actor } from 'excalibur';
+import { Scene, Label, vec, Font, Color, TextAlign, ScreenElement, Rectangle, Text, Actor, Buttons, Keys } from 'excalibur';
 import { GameState, ALL_RULES } from './gamestate.js';
 
 export class DeathRealmScene extends Scene {
@@ -49,6 +49,22 @@ export class DeathRealmScene extends Scene {
             });
             card.graphics.use(bgRect);
 
+            let buttonName = '';
+            let buttonCode = null;
+            let keyCode = null;
+            if (index === 0) { buttonName = 'X'; buttonCode = Buttons.Face3; keyCode = Keys.X; }
+            if (index === 1) { buttonName = 'Y'; buttonCode = Buttons.Face4; keyCode = Keys.Y; }
+            if (index === 2) { buttonName = 'B'; buttonCode = Buttons.Face2; keyCode = Keys.B; }
+
+            if (buttonName) {
+                const btnLabel = new Label({
+                    text: `[ ${buttonName} ]`,
+                    pos: vec(cardWidth / 2, 20),
+                    font: new Font({ family: 'sans-serif', size: 24, color: Color.Cyan, textAlign: TextAlign.Center, bold: true })
+                });
+                card.addChild(btnLabel);
+            }
+
             const titleLabel = new Label({
                 text: rule.name,
                 pos: vec(cardWidth / 2, 50),
@@ -73,7 +89,7 @@ export class DeathRealmScene extends Scene {
                 })
             });
             
-            const descActor = new Actor({ x: cardWidth / 2, y: 130 });
+            const descActor = new Actor({ x: cardWidth / 2, y: 130, anchor: vec(0, 0) });
             descActor.graphics.use(descText);
             card.addChild(descActor);
             
@@ -108,6 +124,22 @@ export class DeathRealmScene extends Scene {
                 }
             });
 
+            card.on('preupdate', (evt) => {
+                const engine = evt.engine;
+                const gamepad = engine.input.gamepads.at(0);
+                let pressed = false;
+                
+                if (keyCode && engine.input.keyboard.wasPressed(keyCode)) pressed = true;
+                if (buttonCode !== null && gamepad && gamepad.connected && gamepad.wasButtonPressed(buttonCode)) pressed = true;
+
+                if (pressed && canAfford) {
+                    GameState.points -= rule.cost;
+                    GameState.activeRules.push(rule.id);
+                    console.log(`Rule added: ${rule.name}. Current active rules:`, GameState.activeRules);
+                    engine.goToScene('ArenaScene'); 
+                }
+            });
+
             this.add(card);
         });
         
@@ -122,7 +154,7 @@ export class DeathRealmScene extends Scene {
         });
         skipBtn.graphics.use(skipBg);
         skipBtn.addChild(new Label({
-            text: 'Skip / Continue',
+            text: '[ A ] Skip / Continue',
             pos: vec(100, 25),
             font: new Font({ family: 'sans-serif', size: 20, color: Color.White, textAlign: TextAlign.Center })
         }));
@@ -130,6 +162,18 @@ export class DeathRealmScene extends Scene {
         skipBtn.on('pointerleave', () => skipBg.color = Color.DarkGray);
         skipBtn.on('pointerup', () => {
             context.engine.goToScene('ArenaScene');
+        });
+        skipBtn.on('preupdate', (evt) => {
+            const engine = evt.engine;
+            const gamepad = engine.input.gamepads.at(0);
+            let pressed = false;
+            
+            if (engine.input.keyboard.wasPressed(Keys.Space) || engine.input.keyboard.wasPressed(Keys.Enter)) pressed = true;
+            if (gamepad && gamepad.connected && gamepad.wasButtonPressed(Buttons.Face1)) pressed = true;
+            
+            if (pressed) {
+                engine.goToScene('ArenaScene');
+            }
         });
         this.add(skipBtn);
     }

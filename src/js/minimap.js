@@ -69,9 +69,11 @@ export class Minimap extends ScreenElement {
             }
         ];
 
-        if (this.game.player) {
-            const px = Math.max(0, Math.min(MAP_WIDTH, this.game.player.pos.x * SCALE));
-            const py = Math.max(0, Math.min(MAP_HEIGHT, this.game.player.pos.y * SCALE));
+        const players = this.game.currentScene.players || [];
+        for (let p of players) {
+            if (p.isDead) continue;
+            const px = Math.max(0, Math.min(MAP_WIDTH, p.pos.x * SCALE));
+            const py = Math.max(0, Math.min(MAP_HEIGHT, p.pos.y * SCALE));
             const playerDot = new Circle({
                 radius: 3,
                 color: Color.Green

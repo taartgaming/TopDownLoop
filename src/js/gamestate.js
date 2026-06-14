@@ -7,7 +7,7 @@ export const ALL_RULES = [
     { id: 'UNMOVE', name: 'Unmove', description: 'Standing still for too long slowly drains your health.', cost: 15 },
     { id: 'UNSEEN', name: 'Unseen', description: 'Enemies turn invisible when outside a close radius.', cost: 25 },
     { id: 'UNTOUCHABLE', name: 'Untouchable', description: 'Enemies gain a temporary forcefield when they spawn.', cost: 30 },
-    { id: 'UNSTOPPABLE', name: 'Unstoppable', description: 'Enemies are immune to knockback and slowing effects.', cost: 40 },
+    { id: 'UNSTOPPABLE', name: 'Unstoppable', description: 'Magic projectiles pierce through enemies without despawning.', cost: 40 },
     { id: 'UNBREAKABLE', name: 'Unbreakable', description: 'Enemy armor is doubled, greatly increasing their health.', cost: 50 },
     { id: 'UNFADE', name: 'Unfade', description: 'Enemies do not despawn or lose aggro if they wander far away.', cost: 35 },
     { id: 'UNBURN', name: 'Unburn', description: 'Fire rules or weapons deal zero damage to enemies.', cost: 20 },
@@ -21,7 +21,8 @@ export const GameState = {
     activeRules: [], 
     maxLoops: 101,
     points: 0,
-    bestLoop: localStorage.getItem('bestLoop') ? parseInt(localStorage.getItem('bestLoop')) : null,
+    numPlayers: 1,
+    bestScore: localStorage.getItem('bestScore') ? parseInt(localStorage.getItem('bestScore')) : null,
 
     /**
      * Checks whether a specific rule string identifier is currently active.
@@ -39,12 +40,12 @@ export const GameState = {
     },
     
     /**
-     * Compares and saves a new best record loop locally to the browser.
+     * Compares and saves a new best score locally to the browser.
      */
-    saveBestLoop(loop) {
-        if (this.bestLoop === null || loop < this.bestLoop) {
-            this.bestLoop = loop;
-            localStorage.setItem('bestLoop', this.bestLoop);
+    saveBestScore(score) {
+        if (this.bestScore === null || score < this.bestScore) {
+            this.bestScore = score;
+            localStorage.setItem('bestScore', this.bestScore);
         }
     },
     

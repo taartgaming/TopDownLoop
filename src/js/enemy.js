@@ -2,6 +2,8 @@ import { Shape, Vector, vec, range, SpriteSheet, Animation, CollisionType } from
 import { Resources } from "./resources.js";
 import { Entity } from "./entity.js";
 import { ManaDrop } from "./manadrop.js";
+import { GameState } from "./gamestate.js";
+import { FireHazard } from "./firehazard.js";
 
 const Facing = Object.freeze({
     UP: 'UP',
@@ -25,6 +27,7 @@ export class Enemy extends Entity {
     constructor(options = {}) {
         super({ width: 64, height: 64, health: options.health ?? 1, collisionType: CollisionType.Active, ...options });
         this.collider.set(Shape.Circle(16)); 
+        this.baseHealth = options.health ?? 1;
    
         this.moveSpeed = options.moveSpeed ?? 100;
         this.isAttacking = false;
@@ -37,7 +40,12 @@ export class Enemy extends Entity {
         this.currentFacing = 'DOWN'; 
         this.attackDamage = options.attackDamage ?? 1;
         this.customTint = options.customTint ?? null;
+        this.pointValue = options.pointValue ?? 1;
         
+        // UNBREAKABLE Rule: Double armor/health
+        if (GameState.hasRule('UNBREAKABLE')) {
+            this.health = this.baseHealth * 2;
+        }
     }
 
     /**
@@ -48,6 +56,11 @@ export class Enemy extends Entity {
         this.pos = new Vector(Math.random() * engine.drawWidth, Math.random() * engine.drawHeight);
         this.setupAnimations();
         
+        // UNTOUCHABLE Rule: Spawn with a 3 second forcefield
+        if (GameState.hasRule('UNTOUCHABLE')) {
+            this.invulnTimer = 3000; 
+        }
+        
     }
 
 
@@ -56,14 +69,46 @@ export class Enemy extends Entity {
      */
     onPreUpdate(engine, delta) {
         if (this.isDead) return;
-        const player = engine.currentScene?.player || engine.player;
-        if (!player) return;
+        
+        const players = engine.currentScene?.players || [];
+        let closestPlayer = null;
+        let minDistance = Infinity;
+        
+        for (let p of players) {
+            if (p.isDead) continue;
+            const dist = p.pos.distance(this.pos);
+            if (dist < minDistance) {
+                minDistance = dist;
+                closestPlayer = p;
+            }
+        }
+        
+        if (!closestPlayer) return;
 
-        let direction = player.pos.sub(this.pos);
+        let direction = closestPlayer.pos.sub(this.pos);
         const distance = direction.size; 
         const attackRange = 60; 
 
         this.touching = distance <= attackRange;
+
+        // UNSEEN Rule: Invisible if too far away
+        if (GameState.hasRule('UNSEEN')) {
+            this.graphics.opacity = distance > 200 ? 0 : 1;
+        }
+        
+        // POISON Rule: Minibosses/Bosses emit toxic aura
+        if (GameState.hasRule('POISON') && this.scale.x > 1) {
+            if (distance < 120) {
+                closestPlayer.addPoisonDamage();
+            }
+        }
+        
+        // FIRE Rule: Normal enemies leave fire trails
+        if (GameState.hasRule('FIRE') && this.scale.x === 1) {
+            if (Math.random() < 0.005) { // Roughly 30% chance every 1 sec
+                this.scene.add(new FireHazard(this.pos.clone()));
+            }
+        }
 
         if (this.isAttacking) {
    
@@ -71,7 +116,9 @@ export class Enemy extends Entity {
 
             if (!this.hasAppliedAttackDamage && this.attackTimer <= (this.attackDuration - this.attackHitDelay)) {
                 if (this.touching) {
-                    player.takeDamage(this.attackDamage);
+                    // UNLUCK Rule: Random Enemy Crits
+                    const finalDmg = (GameState.hasRule('UNLUCK') && Math.random() < 0.2) ? this.attackDamage * 2 : this.attackDamage;
+                    closestPlayer.takeDamage(finalDmg);
                 }
                 this.hasAppliedAttackDamage = true;
             }
@@ -127,6 +174,15 @@ export class Enemy extends Entity {
      */
     die() {
         if (!this.isDead && this.scene) {
+            
+            // UNDEAD Rule: 20% chance to resurrect
+            if (GameState.hasRule('UNDEAD') && Math.random() < 0.20) {
+                this.health = this.baseHealth;
+                this.invulnTimer = 1000;
+                return; // Prevent death
+            }
+            
+            GameState.points += this.pointValue;
             if (Math.random() < 0.35) { // 35% chance to drop mana
                 this.scene.add(new ManaDrop(this.pos.clone()));
             }

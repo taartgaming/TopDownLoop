@@ -1,5 +1,6 @@
 import { Actor, Vector, ParticleEmitter, EmitterType, Color, ParticleTransform, Shape, CollisionType } from "excalibur";
 import { Enemy } from "./enemy.js";
+import { GameState } from "./gamestate.js";
 
 export class MagicProjectile extends Actor {
     /**
@@ -54,7 +55,13 @@ export class MagicProjectile extends Actor {
     onCollisionStart(self, other, side, contact) {
         if (other.owner instanceof Enemy && !other.owner.isDead) {
             other.owner.takeDamage(this.damage);
-            this.kill(); 
+            
+            const kbDir = this.vel.normalize();
+            other.owner.pos = other.owner.pos.add(kbDir.scale(15));
+            
+            if (!GameState.hasRule('UNSTOPPABLE')) {
+                this.kill(); 
+            }
         }
     }
 

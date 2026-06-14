@@ -52,6 +52,8 @@ const Resources = {
     orcAttackUpRight: new ImageSource('./images/Enemy-Melee-Attack-NE.png'),
     Level1: new TiledResource('./maps/city/map.tmj', {strict: false, useTilemapCameraStrategy: true}),
     bgMusic: new Sound('./sound/bgm.mp3'),
+    hitSound: new Sound('./sound/hit.mp3'),
+    shootSound: new Sound('./sound/shoot.mp3')
 
 }
 
