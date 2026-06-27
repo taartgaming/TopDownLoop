@@ -54,7 +54,8 @@ const Resources = {
     Level1: new TiledResource('./maps/city/map.tmj', {strict: false, useTilemapCameraStrategy: true}),
     bgMusic: new Sound('./sound/bgm.mp3'),
     hitSound: new Sound('./sound/sfx/hit.mp3'),
-    shootSound: new Sound('./sound/sfx/shoot.mp3')
+    shootSound: new Sound('./sound/sfx/shoot.mp3'),
+    collectSound: new Sound('./sound/sfx/pickup.mp3'),
 
 }
 
