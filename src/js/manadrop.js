@@ -1,5 +1,7 @@
 import { Actor, Shape, CollisionType, Color, Circle } from "excalibur";
 import { Player } from "./player.js";
+import { GameSettings } from "./gamesettings.js";
+import { Resources } from "./resources.js";
 
 export class ManaDrop extends Actor {
     constructor(pos) {
@@ -26,6 +28,7 @@ export class ManaDrop extends Actor {
     onCollisionStart(self, other, side, contact) {
         if (other.owner instanceof Player) {
             other.owner.restoreMana(this.manaAmount);
+            Resources.collectSound.play(GameSettings.sfxVolume);
             this.kill(); // Consume the drop
         }
     }

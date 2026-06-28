@@ -1,6 +1,7 @@
 import { Actor, Vector, ParticleEmitter, EmitterType, Color, ParticleTransform, Shape, CollisionType, Circle } from "excalibur";
 import { Enemy } from "./enemy.js";
 import { GameState } from "./gamestate.js";
+import { GameSettings } from "./gamesettings.js";
 
 export class MagicProjectile extends Actor {
     /**
@@ -17,7 +18,13 @@ export class MagicProjectile extends Actor {
         });
         this.direction = direction;
         this.speed = 400;
-        this.damage = 1;
+
+        // UNLUCK Rule: 10% chance for double damage
+        if (GameState.hasRule('UNLUCK') && Math.random() < 0.1) {
+            this.damage = 2;
+        } else {
+            this.damage = 1;
+        }
         this.life = 3000; 
     }
 

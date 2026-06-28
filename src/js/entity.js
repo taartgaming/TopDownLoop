@@ -78,8 +78,11 @@ export class Entity extends Actor {
      * Applies a fire damage-over-time status effect.
      */
     addFireDamage() {
-        // UNBURN rule: Enemies take 0 fire damage
-        if (GameState.hasRule('UNBURN') && !this.isPlayer) return;
+        // UNBURN rule: Player is immune to fire
+        if (GameState.hasRule('UNBURN') && this.isPlayer) return;
+
+        // BURN rule: Enemies are immune to fire (counterpart to player immunity)
+        if (GameState.hasRule('BURN') && !this.isPlayer) return;
         
         this.fireTicks = 3;
         this.fireTimer = 1000;
@@ -89,6 +92,12 @@ export class Entity extends Actor {
      * Applies a poison damage-over-time status effect.
      */
     addPoisonDamage() {
+        // UNPOISON rule: Player is immune to poison
+        if (GameState.hasRule('UNPOISON') && this.isPlayer) return;
+
+        // POISON rule: Enemies are immune to poison (counterpart to player immunity)
+        if (GameState.hasRule('POISON') && !this.isPlayer) return;
+
         this.poisonTicks = 3;
         this.poisonTimer = 1000;
     }

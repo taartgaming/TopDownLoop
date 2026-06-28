@@ -1,10 +1,11 @@
-import { Scene, Label, vec, Font, Color, TextAlign, Keys, Buttons } from 'excalibur';
+import { Scene, Label, vec, Font, Color, TextAlign, Keys, Buttons, Actor } from 'excalibur';
 import { GameState } from './gamestate.js';
 import { Resources } from './resources.js';
 import { Player } from './player.js';
 
 export class MenuScene extends Scene {
     playersLabel;
+    continueButton;
 
     /**
      * Activates the menu scene, resets the background music,
@@ -26,7 +27,7 @@ export class MenuScene extends Scene {
         });
         this.add(title);
 
-        const bestScoreText = GameState.bestScore !== null ? `Best Score: ${GameState.bestScore} Pts (Lowest Wins)` : 'Best Score: None';
+        const bestScoreText = `High Score: ${GameState.bestScore || 0}`;
         const bestScoreLabel = new Label({
             text: bestScoreText,
             pos: vec(1280 / 2, 350),
@@ -45,18 +46,42 @@ export class MenuScene extends Scene {
         });
         this.add(this.playersLabel);
 
-        const startLabel = new Label({
-            text: 'Press SPACE or A to Start',
+        const startButton = new Actor({
+            pos: vec(1280 / 2, 520),
+            width: 300,
+            height: 60
+        });
+        startButton.graphics.use(new Label({
+            text: 'New Game',
             pos: vec(1280 / 2, 520),
             font: new Font({
-                family: 'sans-serif', size: 40, color: Color.Green, textAlign: TextAlign.Center
+                family: 'sans-serif', size: 40, color: Color.Green, textAlign: TextAlign.Center,
             })
+        }));
+        startButton.on('pointerup', () => this.engine.goToScene('SaveSlotScene', { isNewGame: true }));
+        this.add(startButton);
+
+        this.continueButton = new Actor({
+            pos: vec(1280 / 2, 600),
+            width: 300,
+            height: 60
         });
-        this.add(startLabel);
+        const continueLabel = new Label({
+            text: 'Continue',
+            pos: vec(1280 / 2, 600),
+            font: new Font({
+                family: 'sans-serif', size: 40, color: Color.Gray, textAlign: TextAlign.Center
+            })
+        })
+        this.continueButton.graphics.use(continueLabel);
+        this.continueButton.on('pointerup', () => this.onContinue());
+        this.add(this.continueButton);
+
+        this.updateContinueButton();
     }
 
     /**
-     * Checks for input to start the game and transition to the Arena.
+     * Checks for input to start the game or change player count.
      */
     onPreUpdate(engine) {
         let started = false;
@@ -72,12 +97,32 @@ export class MenuScene extends Scene {
             this.playersLabel.text = `Players: ${GameState.numPlayers}  < Use Left/Right >`;
         }
 
-        if (engine.input.keyboard.wasPressed(Keys.Space)) started = true;
-        if (gamepad && gamepad.connected && gamepad.wasButtonPressed(Buttons.Face1)) started = true;
-        
-        if (started) {
-            GameState.resetRun();
-            engine.goToScene('ArenaScene');
+        if (engine.input.keyboard.wasPressed(Keys.Space) || (gamepad && gamepad.connected && gamepad.wasButtonPressed(Buttons.Face1))) {
+            this.engine.goToScene('SaveSlotScene', { isNewGame: true });
+        }
+
+        if (engine.input.keyboard.wasPressed(Keys.C) || (gamepad && gamepad.connected && gamepad.wasButtonPressed(Buttons.Face2))) {
+            this.onContinue();
+        }
+    }
+
+    onContinue() {
+        if (this.hasAnySave()) {
+            this.engine.goToScene('SaveSlotScene', { isNewGame: false, hasSaves: true });
+        }
+    }
+
+    hasAnySave() {
+        for (let i = 0; i < 4; i++) {
+            if (localStorage.getItem(`saveGame_${i}`)) return true;
+        }
+        return false;
+    }
+
+    updateContinueButton() {
+        const label = this.continueButton.graphics.current;
+        if (label instanceof Label) {
+            label.color = this.hasAnySave() ? Color.Cyan : Color.Gray;
         }
     }
 }

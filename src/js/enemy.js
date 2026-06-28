@@ -43,7 +43,7 @@ export class Enemy extends Entity {
         this.pointValue = options.pointValue ?? 1;
         
         // UNBREAKABLE Rule: Double armor/health
-        if (GameState.hasRule('UNBREAKABLE')) {
+        if (GameState.hasRule('BREAKABLE')) {
             this.health = this.baseHealth * 2;
         }
     }
@@ -83,7 +83,12 @@ export class Enemy extends Entity {
             }
         }
         
-        if (!closestPlayer) return;
+        // UNSEEN Rule: Player is invisible when standing still
+        if (GameState.hasRule('UNSEEN') && closestPlayer && closestPlayer.vel.size === 0) {
+            this.vel = vec(0, 0); // Stop moving
+            this.playAnimationBasedOnState();
+            return; // Ignore player
+        }
 
         let direction = closestPlayer.pos.sub(this.pos);
         const distance = direction.size; 
@@ -116,8 +121,8 @@ export class Enemy extends Entity {
 
             if (!this.hasAppliedAttackDamage && this.attackTimer <= (this.attackDuration - this.attackHitDelay)) {
                 if (this.touching) {
-                    // UNLUCK Rule: Random Enemy Crits
-                    const finalDmg = (GameState.hasRule('UNLUCK') && Math.random() < 0.2) ? this.attackDamage * 2 : this.attackDamage;
+                    // LUCK Rule: Random Enemy Crits
+                    const finalDmg = (GameState.hasRule('LUCK') && Math.random() < 0.2) ? this.attackDamage * 2 : this.attackDamage;
                     closestPlayer.takeDamage(finalDmg);
                 }
                 this.hasAppliedAttackDamage = true;
@@ -176,7 +181,7 @@ export class Enemy extends Entity {
         if (!this.isDead && this.scene) {
             
             // UNDEAD Rule: 20% chance to resurrect
-            if (GameState.hasRule('UNDEAD') && Math.random() < 0.20) {
+            if (GameState.hasRule('DEAD') && Math.random() < 0.20) {
                 this.health = this.baseHealth;
                 this.invulnTimer = 1000;
                 return; // Prevent death

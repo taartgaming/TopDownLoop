@@ -1,5 +1,6 @@
-import { Scene, Timer, vec, Color, Actor, CollisionType } from 'excalibur';
+import { Scene, Timer, vec, Color, Actor, CollisionType, Keys } from 'excalibur';
 import { GameState } from './gamestate.js';
+import { GameSettings } from './gamesettings.js';
 import { Player } from './player.js'; 
 import { Shadow } from './shadow.js';
 import { generateRandomLevel } from './levelgenerator.js';
@@ -29,13 +30,37 @@ export class ArenaScene extends Scene {
      * Activates the scene, clearing previous runs, starting music, setting up the map,
      * spawning the player and initial enemies, and initializing UI/minimap.
      */
-    onActivate(context) {
+    onActivate(context) { 
         const engine = context.engine;
         this.clear();
         
+        const loadSave = context.data?.loadSave;
+        const slot = context.data?.slot;
+
+        if (loadSave) {
+            const savedState = JSON.parse(localStorage.getItem('saveGame'));
+            if (savedState) {
+                GameState.currentLoop = savedState.currentLoop;
+                GameState.currentWave = savedState.currentWave;
+                GameState.points = savedState.points;
+                GameState.highScore = savedState.highScore;
+                GameState.activeRules = savedState.activeRules;
+                GameState.numPlayers = savedState.numPlayers;
+                GameState.saveSlot = savedState.saveSlot;
+                // Player data will be applied after players are created
+            }
+        } else {
+            // This is a new game, reset score but keep points from death realm
+            GameState.highScore = 0;
+        }
+
+        // Reset wave timer interval based on loop
+        const waveInterval = Math.max(5000, 15000 - (GameState.currentLoop * 500));
+        this.waveTimer.interval = waveInterval;
+
         if (!Resources.bgMusic.isPlaying()) {
             Resources.bgMusic.loop = true;
-            Resources.bgMusic.play(0.5);
+            Resources.bgMusic.play(GameSettings.musicVolume);
         }
 
         this.add(this.waveTimer);
@@ -56,12 +81,20 @@ export class ArenaScene extends Scene {
 
         this.players = [];
         const startX = 640 - ((GameState.numPlayers - 1) * 40);
-        
+        const savedPlayerData = loadSave ? JSON.parse(localStorage.getItem('saveGame'))?.playerData : null;
+
         for (let i = 1; i <= GameState.numPlayers; i++) {
             const p = new Player(i);
             p.pos = vec(startX + (i - 1) * 80, 640); 
             this.add(p);
             this.players.push(p);
+
+            if (savedPlayerData && savedPlayerData[i-1]) {
+                const data = savedPlayerData[i-1];
+                p.health = data.health;
+                p.mana = data.mana;
+                if (data.isDead) p.die();
+            }
         }
 
         for (let i = 0; i < 5; i++) {
@@ -89,6 +122,11 @@ export class ArenaScene extends Scene {
             for (let p of alivePlayers) { sumX += p.pos.x; sumY += p.pos.y; }
             this.cameraTarget.pos = vec(sumX / alivePlayers.length, sumY / alivePlayers.length);
         }
+
+        // Pause Menu
+        if (engine.input.keyboard.wasPressed(Keys.Escape)) {
+            engine.goToScene('PauseScene');
+        }
     }
 
     /**
@@ -110,6 +148,7 @@ export class ArenaScene extends Scene {
         const targetPlayer = alivePlayers[Math.floor(Math.random() * alivePlayers.length)]; // Randomly choose a player to spawn around
 
         GameState.points += 5; // 5 points per wave!
+        GameState.save(this.players);
 
         if (GameState.currentWave === 20) {
             const boss = new Shadow({ health: 10 + GameState.currentLoop * 10, attackDamage: 99, pointValue: 0 });
@@ -119,7 +158,7 @@ export class ArenaScene extends Scene {
             
             boss.on('kill', () => {
                 console.log('Boss Defeated! You won the run!');
-                GameState.saveBestScore(GameState.points);
+                GameState.updateAndSaveHighScore();
                 engine.goToScene('MenuScene');
             });
 

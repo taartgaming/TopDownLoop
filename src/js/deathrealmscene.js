@@ -1,4 +1,4 @@
-import { Scene, Label, vec, Font, Color, TextAlign, ScreenElement, Rectangle, Text, Actor, Buttons, Keys } from 'excalibur';
+import { Scene, Label, vec, Font, Color, TextAlign, ScreenElement, Rectangle, Text, Actor, Buttons, Keys, Vector, BaseAlign } from 'excalibur';
 import { GameState, ALL_RULES } from './gamestate.js';
 
 export class DeathRealmScene extends Scene {
@@ -10,7 +10,7 @@ export class DeathRealmScene extends Scene {
         this.clear();
 
         const title = new Label({
-            text: `Death Realm - Choose a new Rule (Points: ${GameState.points})`,
+            text: `You are Dead!`,
             pos: vec(1280 / 2, 100),
             font: new Font({
                 family: 'sans-serif',
@@ -21,17 +21,52 @@ export class DeathRealmScene extends Scene {
         });
         this.add(title);
 
+        // Calculate score multiplier
+        const baseScore = GameState.points;
+        const multiplier = 1 + (GameState.activeRules.length * 0.1);
+        const finalScore = Math.floor(baseScore * multiplier);
+        GameState.highScore = finalScore; // Set the final score for this run
+        GameState.updateAndSaveHighScore();
+
+        const scoreText = new Label({
+            text: `Run Score: ${finalScore}\n(Points: ${baseScore} x${multiplier.toFixed(1)} Multiplier)`,
+            pos: new Vector(1280 - 20, 20),
+            font: new Font({
+                family: 'sans-serif', size: 24, color: Color.Yellow, textAlign: TextAlign.Right
+            }),
+            baseAlign: BaseAlign.Top
+        });
+        this.add(scoreText);
+
+        const pointsTitle = new Label({
+            text: `Available Points: ${GameState.points}`,
+            pos: vec(20, 20),
+            font: new Font({
+                family: 'sans-serif', size: 24, color: Color.White, textAlign: TextAlign.Left
+            }),
+            baseAlign: BaseAlign.Top
+        });
+        this.add(pointsTitle);
+
         const availableRules = ALL_RULES.filter(r => !GameState.hasRule(r.id));
-        
-        availableRules.sort(() => Math.random() - 0.5);
-        const choices = availableRules.slice(0, 3);
+        // Simple logic to offer one positive and two negative rules
+        const positiveRules = availableRules.filter(r => r.isPositive);
+        positiveRules.sort(() => Math.random() - 0.5);
+        const negativeRules = availableRules.filter(r => !r.isPositive);
+        negativeRules.sort(() => Math.random() - 0.5);
+
+        const choices = [];
+        if (positiveRules.length > 0) {
+            choices.push(positiveRules[0]);
+        }
+        choices.push(...negativeRules.slice(0, Math.max(0, 3 - choices.length)));
 
         const cardWidth = 300;
         const cardHeight = 400;
         const gapX = 350;
         
         const startX = (1280 / 2) - (((choices.length - 1) * gapX) / 2) - (cardWidth / 2);
-
+        
         choices.forEach((rule, index) => {
             const card = new ScreenElement({
                 x: startX + (index * gapX),
@@ -118,6 +153,7 @@ export class DeathRealmScene extends Scene {
                 if (canAfford) {
                     GameState.points -= rule.cost;
                     GameState.activeRules.push(rule.id);
+                    GameState.save(context.engine.currentScene.players);
                     console.log(`Rule added: ${rule.name}. Current active rules:`, GameState.activeRules);
                     
                     context.engine.goToScene('ArenaScene'); 
@@ -135,6 +171,7 @@ export class DeathRealmScene extends Scene {
                 if (pressed && canAfford) {
                     GameState.points -= rule.cost;
                     GameState.activeRules.push(rule.id);
+                    GameState.save(engine.currentScene.players);
                     console.log(`Rule added: ${rule.name}. Current active rules:`, GameState.activeRules);
                     engine.goToScene('ArenaScene'); 
                 }
@@ -154,7 +191,7 @@ export class DeathRealmScene extends Scene {
         });
         skipBtn.graphics.use(skipBg);
         skipBtn.addChild(new Label({
-            text: '[ A ] Skip / Continue',
+            text: 'Skip / Continue',
             pos: vec(100, 25),
             font: new Font({ family: 'sans-serif', size: 20, color: Color.White, textAlign: TextAlign.Center })
         }));

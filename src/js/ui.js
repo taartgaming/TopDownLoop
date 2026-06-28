@@ -15,12 +15,12 @@ export class UI extends ScreenElement{
     onInitialize(engine) {
         this.healthLabel = new Label({
             text: 'Lives: ',
-            pos: vec(20, 30),
+            pos: vec(20, 140),
             font: new Font({ size: 24, color: Color.White, family: 'sans-serif' })
         });
         this.manaLabel = new Label({
             text: 'Mana: 100/100',
-            pos: vec(20, 65),
+            pos: vec(20, 175),
             font: new Font({ size: 24, color: Color.Cyan, family: 'sans-serif' })
         });
         this.waveLabel = new Label({
@@ -40,7 +40,7 @@ export class UI extends ScreenElement{
         });
         this.rulesLabel = new Label({
             text: 'Active Rules:\nNone',
-            pos: vec(20, 100),
+            pos: vec(20, 210),
             font: new Font({ size: 16, color: Color.Yellow, family: 'sans-serif' })
         });
 

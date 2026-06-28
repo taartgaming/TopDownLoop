@@ -1,6 +1,7 @@
 import { Shape, SpriteSheet, Animation, Keys, Vector, CollisionType, Buttons, Axes, Actor } from "excalibur"
-import { Resources } from "./resources.js";
+import { Resources } from "./resources.js"; 
 import { GameState } from "./gamestate.js";
+import { GameSettings } from "./gamesettings.js";
 import { Entity } from "./entity.js";
 import { Enemy } from "./enemy.js";
 import { MagicProjectile } from "./magicprojectile.js";
@@ -23,10 +24,11 @@ export class Player extends Entity {
      */
     constructor(playerIndex = 1) {
        
-        const startingHealth = GameState.hasRule('UNDEAD') ? 6 : 3;
+        const startingHealth = 3;
         
         super({ width: 64, height: 64, health: startingHealth, collisionType: CollisionType.Active });
         this.collider.set(Shape.Circle(24));
+        if (GameState.hasRule('UNDEAD')) this.maxHealth = 6;
         this.playerIndex = playerIndex;
         this.isPlayer = true;
         
@@ -42,7 +44,7 @@ export class Player extends Entity {
         
         this.maxMana = 100;
         this.mana = 100;
-        this.manaCost = 5; // Magic costs 20 mana per shot
+        this.manaCost = 5; // Magic costs 5 mana per shot
         this.standStillTimer = 0;
 
         this.setupAnimations();
@@ -123,13 +125,25 @@ export class Player extends Entity {
         let attackPressed = false;
         let shootPressed = false;
         
-        // UNMOVE Rule: Take damage if standing still for > 2 seconds
-        if (GameState.hasRule('UNMOVE')) {
+        // MOVE Rule: Take damage if standing still for > 2 seconds
+        if (GameState.hasRule('MOVE')) {
             if (this.vel.x === 0 && this.vel.y === 0) {
                 this.standStillTimer += delta;
                 if (this.standStillTimer > 2000) {
                     this.takeDamage(1);
                     this.standStillTimer = 0;
+                }
+            } else {
+                this.standStillTimer = 0;
+            }
+        }
+
+        // UNMOVE Rule: Regenerate health if standing still
+        if (GameState.hasRule('UNMOVE')) {
+            if (this.vel.x === 0 && this.vel.y === 0) {
+                this.standStillTimer += delta;
+                if (this.standStillTimer > 2000) { // After 2 seconds of standing still
+                    this.health = Math.min(this.maxHealth, this.health + (1 * (delta/1000))); // Heal 1 hp per second
                 }
             } else {
                 this.standStillTimer = 0;
@@ -212,7 +226,7 @@ export class Player extends Entity {
             this.mana -= this.manaCost;
         }
 
-        Resources.shootSound.play();
+        Resources.shootSound.play(GameSettings.sfxVolume);
 
         let dir = new Vector(0, 1);
         
@@ -260,7 +274,7 @@ export class Player extends Entity {
         const prevHealth = this.health;
         super.takeDamage(amount);
         if (this.health < prevHealth) {
-            Resources.hitSound.play();
+            Resources.hitSound.play(GameSettings.sfxVolume);
         }
         console.log(`Player hit! Health remaining: ${this.health}`);
     }
@@ -275,10 +289,14 @@ export class Player extends Entity {
         const scene = this.scene;
         this.kill(); // Removes them from the screen entirely
 
+        // Add remaining health to points
+        GameState.points += this.health * 100;
+
         // Check if ALL players are dead
         if (scene && scene.players.every(p => p.isDead)) {
             const engine = scene.engine;
             if (GameState.currentLoop >= GameState.maxLoops) {
+                GameState.updateAndSaveHighScore();
                 engine.goToScene('GameOverScene'); 
             } else {
                 GameState.triggerDeathLoop();
