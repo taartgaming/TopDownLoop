@@ -34,6 +34,14 @@ export class SettingsScene extends Scene {
         });
         backButton.on('pointerup', () => this.engine.goToScene('PauseScene'));
         this.add(backButton);
+
+        const instructions = new Label({
+            text: '< Use Up/Down to Select, Left/Right to Adjust >',
+            pos: vec(engine.halfDrawWidth, 450),
+            font: new Font({ family: 'sans-serif', size: 24, color: Color.Yellow, textAlign: TextAlign.Center })
+        });
+        this.add(instructions);
+        this.updateSelector();
     }
 
     onPreUpdate(engine) {
@@ -82,14 +90,6 @@ export class SettingsScene extends Scene {
             font: new Font({ family: 'sans-serif', size: 32, color: Color.White, textAlign: TextAlign.Center })
         });
         this.add(this.musicVolumeLabel);
-
-        const instructions = new Label({
-            text: '< Use Up/Down to Select, Left/Right to Adjust >',
-            pos: vec(this.engine.halfDrawWidth, 450),
-            font: new Font({ family: 'sans-serif', size: 24, color: Color.Yellow, textAlign: TextAlign.Center })
-        });
-        this.add(instructions);
-        this.updateSelector();
     }
 
     createSfxVolumeSlider() {

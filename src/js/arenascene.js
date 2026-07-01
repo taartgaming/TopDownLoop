@@ -37,16 +37,16 @@ export class ArenaScene extends Scene {
         const loadSave = context.data?.loadSave;
         const slot = context.data?.slot;
 
+        let savedState = null;
         if (loadSave) {
-            const savedState = JSON.parse(localStorage.getItem('saveGame'));
+            savedState = JSON.parse(localStorage.getItem(`saveGame_${GameState.saveSlot}`));
             if (savedState) {
                 GameState.currentLoop = savedState.currentLoop;
                 GameState.currentWave = savedState.currentWave;
                 GameState.points = savedState.points;
-                GameState.highScore = savedState.highScore;
+                GameState.highScore = savedState.highScore ?? 0;
                 GameState.activeRules = savedState.activeRules;
                 GameState.numPlayers = savedState.numPlayers;
-                GameState.saveSlot = savedState.saveSlot;
                 // Player data will be applied after players are created
             }
         } else {
@@ -73,7 +73,7 @@ export class ArenaScene extends Scene {
         // 2. Clear old strategies and set up tracking BEFORE adding the map.
         // This ensures the map's limitCameraBounds strategy is applied AFTER our tracking strategy.
         this.camera.clearAllStrategies();
-        this.camera.strategy.radiusAroundActor(this.cameraTarget, 20);
+        this.camera.strategy.lockToActor(this.cameraTarget);
 
         // 3. Setup the Map (which automatically adds the limitCameraBounds strategy!)
         generateRandomLevel();
@@ -81,7 +81,7 @@ export class ArenaScene extends Scene {
 
         this.players = [];
         const startX = 640 - ((GameState.numPlayers - 1) * 40);
-        const savedPlayerData = loadSave ? JSON.parse(localStorage.getItem('saveGame'))?.playerData : null;
+        const savedPlayerData = savedState?.playerData;
 
         for (let i = 1; i <= GameState.numPlayers; i++) {
             const p = new Player(i);
@@ -89,11 +89,13 @@ export class ArenaScene extends Scene {
             this.add(p);
             this.players.push(p);
 
-            if (savedPlayerData && savedPlayerData[i-1]) {
-                const data = savedPlayerData[i-1];
+            const playerData = savedPlayerData?.[i - 1];
+            if (playerData) {
+                const data = playerData;
                 p.health = data.health;
                 p.mana = data.mana;
-                if (data.isDead) p.die();
+                // The die() method kills and removes the actor, we just want to set the state
+                if (data.isDead) p.isDead = true;
             }
         }
 

@@ -65,4 +65,10 @@ export class PauseScene extends Scene {
     resumeGame() {
         this.engine.goToScene('ArenaScene');
     }
+
+    onPreUpdate(engine) {
+        if (engine.input.keyboard.wasPressed(Keys.Escape)) {
+            this.resumeGame();
+        }
+    }
 }

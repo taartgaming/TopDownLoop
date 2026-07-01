@@ -1,4 +1,4 @@
-import { Shape, Vector, vec, range, SpriteSheet, Animation, CollisionType } from "excalibur"
+import { Shape, Vector, vec, range, SpriteSheet, Animation, CollisionType, Color } from "excalibur"
 import { Resources } from "./resources.js";
 import { Entity } from "./entity.js";
 import { ManaDrop } from "./manadrop.js";
@@ -46,6 +46,16 @@ export class Enemy extends Entity {
         if (GameState.hasRule('BREAKABLE')) {
             this.health = this.baseHealth * 2;
         }
+
+        // Add random size and speed variation, but not for bosses/minibosses
+        if (!options.health) { // A simple way to check if it's a regular enemy
+            const sizeVariation = 0.8 + Math.random() * 0.7; // 80% to 150%
+            this.scale = vec(sizeVariation, sizeVariation);
+            
+            // Smaller are faster, larger are slower
+            this.moveSpeed = this.moveSpeed / sizeVariation;
+            this.health = Math.ceil(this.health * sizeVariation);
+        }
     }
 
     /**
@@ -59,6 +69,11 @@ export class Enemy extends Entity {
         // UNTOUCHABLE Rule: Spawn with a 3 second forcefield
         if (GameState.hasRule('UNTOUCHABLE')) {
             this.invulnTimer = 3000; 
+        }
+
+        // FIRE Rule: Add a red hue to enemies that will leave a fire trail
+        if (GameState.hasRule('FIRE') && this.scale.x <= 1.5 && !this.customTint) { // Affects normal enemies
+            this.customTint = new Color(255, 150, 150);
         }
         
     }
@@ -88,6 +103,12 @@ export class Enemy extends Entity {
             this.vel = vec(0, 0); // Stop moving
             this.playAnimationBasedOnState();
             return; // Ignore player
+        }
+
+        // If there are no alive players, do nothing
+        if (!closestPlayer) {
+            this.vel = vec(0, 0);
+            return;
         }
 
         let direction = closestPlayer.pos.sub(this.pos);

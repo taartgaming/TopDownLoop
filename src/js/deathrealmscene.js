@@ -191,7 +191,7 @@ export class DeathRealmScene extends Scene {
         });
         skipBtn.graphics.use(skipBg);
         skipBtn.addChild(new Label({
-            text: 'Skip / Continue',
+            text: '[A] Skip / Continue',
             pos: vec(100, 25),
             font: new Font({ family: 'sans-serif', size: 20, color: Color.White, textAlign: TextAlign.Center })
         }));
